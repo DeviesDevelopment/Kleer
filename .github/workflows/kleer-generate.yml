@@ -1,0 +1,37 @@
+name: Verify Kleer Models
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Install xscgen
+        run: dotnet tool install --global dotnet-xscgen
+
+      - name: Fetch latest Kleer XSD
+        run: curl -sSL https://api.kleer.se/v1/xsd -o Kleer/doc.xsd
+
+      - name: Regenerate models
+        run: |
+          rm -rf Kleer/Models
+          mkdir -p Kleer/Models
+          xscgen Kleer/doc.xsd --namespace=Kleer.Models --output Kleer/Models
+
+      - name: Check for uncommitted changes
+        run: |
+          if ! git diff --exit-code; then
+            echo "Generated models are out of date. Please commit updated files."
+            exit 1
+          fi
