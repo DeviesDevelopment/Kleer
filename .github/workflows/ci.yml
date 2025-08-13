@@ -1,4 +1,4 @@
-name: Verify Kleer Models
+name: CI (Generate, Build, Verify)
 
 on:
   push:
@@ -29,9 +29,17 @@ jobs:
           mkdir -p Kleer/Models
           xscgen Kleer/doc.xsd --namespace=Kleer.Models --output Kleer/Models
 
-      - name: Check for uncommitted changes
+      - name: Restore
+        run: dotnet restore Kleer/Kleer.csproj
+
+      - name: Build
+        run: dotnet build Kleer/Kleer.csproj -c Release --no-restore
+
+      - name: Verify no drift (schema/models)
         run: |
+          # Fail if regeneration changed tracked files (doc.xsd or Models/*)
           if ! git diff --exit-code; then
-            echo "Generated models are out of date. Please commit updated files."
+            echo "Generated models (or doc.xsd) differ from committed versions."
+            echo "Run the regenerate snippet locally and commit the changes."
             exit 1
           fi
