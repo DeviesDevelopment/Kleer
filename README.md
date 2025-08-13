@@ -3,13 +3,9 @@
 Kleer is an accounting service — see [API documentation](https://api-doc.kleer.se/).  
 This project provides C# bindings to make it easier to interact with the Kleer API.
 
-> **Licens / License**  
-> **SE:** Detta projekt är **endast för icke‑kommersiellt bruk** i nuläget. Kontakta oss om du vill använda biblioteket kommersiellt.  
-> **EN:** This project is **for non‑commercial use only** at this time. Please contact us for commercial licensing.
-
 > **Om oss / About us**  
 > **SE:** Vi på Devies är experter på Kleer, är **integrationspartner** med dem och hjälper gärna till med integrationer, rådgivning och vidareutveckling.  
-> **EN:** We at Devies are Kleer experts and an **integration partner**. We’re happy to help with integrations, advisory work, and enhancements.  
+> **EN:** We at Devies are Kleer experts and an **integration partner**. We're happy to help with integrations, advisory work, and enhancements.  
 > **Kontakt / Contact:** hello@devies.se
 
 ## Generating models

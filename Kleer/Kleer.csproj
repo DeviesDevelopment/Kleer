@@ -11,12 +11,11 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <Description>
-            C# bindings for the Kleer API. Non-commercial use only (CC BY-NC 4.0).
-            Contact Devies for commercial licensing and integration help.
+            C# bindings for the Kleer API. Built by Devies (Kleer integration partner).
+            For integration help and commercial support, contact hello@devies.se.
         </Description>
-        <PackageLicenseExpression>CC-BY-NC-4.0</PackageLicenseExpression>
-        <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-        <PackageTags>Kleer;Accounting;Client;XML;XSD;NonCommercial</PackageTags>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <PackageTags>Kleer;Accounting;Client;XML;XSD;Devies</PackageTags>        
         <PackageProjectUrl>https://github.com/DeviesDevelopment/Kleer</PackageProjectUrl>
         <RepositoryUrl>https://github.com/DeviesDevelopment/Kleer</RepositoryUrl>
         <PackageReadmeFile>README.md</PackageReadmeFile>
