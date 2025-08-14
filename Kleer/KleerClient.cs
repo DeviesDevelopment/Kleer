@@ -1,8 +1,4 @@
-using System;
-using System.IO;
-using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Threading.Tasks;
 using System.Xml.Serialization;
 
 namespace Kleer
@@ -29,17 +25,28 @@ namespace Kleer
         /// <summary>
         /// Build a preconfigured request (user can add content, headers etc.)
         /// </summary>
-        public HttpRequestMessage BuildRequest(HttpMethod method, string endpoint)
+        public static HttpRequestMessage BuildRequest(HttpMethod method, string endpoint)
         {
             var request = new HttpRequestMessage(method, endpoint);
             request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/xml"));
+            return request;
+        }
+
+        /// <summary>
+        /// Build a preconfigured request with serialized XML content
+        /// </summary>
+        public static HttpRequestMessage BuildXmlRequest(HttpMethod method, string endpoint, object data)
+        {
+            var request = BuildRequest(method, endpoint);
+            request.Content = new StringContent(SerializeToXml(data));
+            request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/xml");
             return request;
         }
         
         /// <summary>
         /// Build a request with binary content (e.g. for uploading receipts or attachments).
         /// </summary>
-        public HttpRequestMessage BuildBinaryRequest(HttpMethod method, string endpoint, byte[] data)
+        public static HttpRequestMessage BuildBinaryRequest(HttpMethod method, string endpoint, byte[] data)
         {
             var request = new HttpRequestMessage(method, endpoint)
             {
@@ -54,7 +61,7 @@ namespace Kleer
         /// <summary>
         /// Build a request with binary content from a stream (e.g. FileStream or MemoryStream).
         /// </summary>
-        public HttpRequestMessage BuildBinaryRequest(HttpMethod method, string endpoint, Stream stream)
+        public static HttpRequestMessage BuildBinaryRequest(HttpMethod method, string endpoint, Stream stream)
         {
             var request = new HttpRequestMessage(method, endpoint)
             {
