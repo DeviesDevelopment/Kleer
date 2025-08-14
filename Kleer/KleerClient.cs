@@ -1,8 +1,4 @@
-using System;
-using System.IO;
-using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Threading.Tasks;
 using System.Xml.Serialization;
 
 namespace Kleer
@@ -33,6 +29,17 @@ namespace Kleer
         {
             var request = new HttpRequestMessage(method, endpoint);
             request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/xml"));
+            return request;
+        }
+
+        /// <summary>
+        /// Build a preconfigured request with serialized XML content
+        /// </summary>
+        public HttpRequestMessage BuildXmlRequest(HttpMethod method, string endpoint, object data)
+        {
+            var request = BuildRequest(method, endpoint);
+            request.Content = new StringContent(SerializeToXml(data));
+            request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/xml");
             return request;
         }
         
