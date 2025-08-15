@@ -1,0 +1,73 @@
+name: Daily model drift check
+
+on:
+  schedule:
+    # Runs every day at 05:00 UTC
+    - cron: "0 5 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write # needed to push a branch
+  pull-requests: write # needed to open a PR
+
+concurrency:
+  group: daily-model-drift
+  cancel-in-progress: false
+
+jobs:
+  drift-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Install xscgen
+        run: dotnet tool install --global dotnet-xscgen
+
+      - name: Fetch latest Kleer XSD
+        run: curl -sSL https://api.kleer.se/v1/xsd -o Kleer/doc.xsd
+
+      - name: Regenerate models
+        run: |
+          rm -rf Kleer/Models
+          mkdir -p Kleer/Models
+          xscgen Kleer/doc.xsd --namespace=Kleer.Models --output Kleer/Models
+
+      - name: Restore & Build (sanity check)
+        run: |
+          dotnet restore Kleer/Kleer.csproj
+          dotnet build Kleer/Kleer.csproj -c Release --no-restore
+
+      - name: Create PR if drift detected
+        id: cpr
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: "chore: sync Kleer XSD & regenerated models"
+          title: "chore: sync Kleer XSD & regenerated models"
+          body: |
+            This automated PR updates `Kleer/doc.xsd` and regenerated `Kleer/Models/*`
+            to match the latest schema fetched from https://api.kleer.se/v1/xsd.
+
+            - Created by **Daily model drift check** workflow.
+          branch: chore/sync-kleer-xsd
+          delete-branch: true
+          add-paths: |
+            Kleer/doc.xsd
+            Kleer/Models/**
+          signoff: false
+
+      - name: Log result
+        run: |
+          if [[ "${{ steps.cpr.outputs.pull-request-number }}" != "" ]]; then
+            echo "Opened PR #${{ steps.cpr.outputs.pull-request-number }}."
+          else
+            echo "No drift detected; nothing to do."
+          fi
