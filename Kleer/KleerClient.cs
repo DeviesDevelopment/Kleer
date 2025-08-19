@@ -35,10 +35,10 @@ namespace Kleer
         /// <summary>
         /// Build a preconfigured request with serialized XML content
         /// </summary>
-        public static HttpRequestMessage BuildXmlRequest(HttpMethod method, string endpoint, object data)
+        public static HttpRequestMessage BuildXmlRequest<T>(HttpMethod method, string endpoint, T data)
         {
             var request = BuildRequest(method, endpoint);
-            request.Content = new StringContent(SerializeToXml(data));
+            request.Content = new StringContent(KleerXmlSerializer.Serialize(data));
             request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/xml");
             return request;
         }
@@ -97,9 +97,7 @@ namespace Kleer
 
             var xml = await response.Content.ReadAsStringAsync();
 
-            var serializer = new XmlSerializer(typeof(T));
-            using var reader = new StringReader(xml);
-            return (T)serializer.Deserialize(reader);
+            return KleerXmlSerializer.Deserialize<T>(xml);
         }
 
         public void Dispose()
@@ -113,10 +111,7 @@ namespace Kleer
             if (obj == null)
                 throw new ArgumentNullException(nameof(obj), "Cannot serialize null object to XML.");
 
-            var serializer = new XmlSerializer(typeof(T));
-            using var writer = new StringWriter();
-            serializer.Serialize(writer, obj);
-            return writer.ToString();
+            return KleerXmlSerializer.Serialize(obj);
         }
     }
 }
