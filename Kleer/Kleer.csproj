@@ -3,7 +3,7 @@
     <PropertyGroup>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <PackageId>Kleer</PackageId>
-        <Version>1.0.4</Version>
+        <Version>1.0.5</Version>
         <Company>Devies</Company>
         <Authors>John Johansson; Erik Jergéus</Authors>
         <TargetFramework>netstandard2.1</TargetFramework>

@@ -1,12 +1,15 @@
 using System.Net.Http.Headers;
-using System.Xml.Serialization;
 
 namespace Kleer
 {
     public class KleerClient : IDisposable
     {
         private readonly HttpClient _httpClient;
+        private readonly bool _ownsHttpClient;
 
+        /// <summary>
+        /// Standard constructor (creates its own HttpClient).
+        /// </summary>
         public KleerClient(string token, string baseUrl = "https://api.kleer.se/v1/")
         {
             if (string.IsNullOrWhiteSpace(token))
@@ -20,7 +23,32 @@ namespace Kleer
             _httpClient.DefaultRequestHeaders.Accept.Clear();
             _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/xml"));
             _httpClient.DefaultRequestHeaders.Add("X-Token", token);
+
+            _ownsHttpClient = true;
         }
+
+        /// <summary>
+        /// Advanced constructor (accepts a preconfigured HttpClient).
+        /// Caller is responsible for configuring BaseAddress, headers, timeout, etc.
+        /// </summary>
+        public KleerClient(HttpClient httpClient, string? token = null, string? baseUrl = null)
+        {
+            _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
+            _ownsHttpClient = false; // external client
+
+            if (!string.IsNullOrWhiteSpace(baseUrl))
+                _httpClient.BaseAddress = new Uri(baseUrl.TrimEnd('/') + "/");
+
+            if (!string.IsNullOrWhiteSpace(token))
+                _httpClient.DefaultRequestHeaders.Add("X-Token", token);
+
+            // Ensure Accept header for Kleer is always present
+            if (_httpClient.DefaultRequestHeaders.Accept.All(h => h.MediaType?.Equals("application/xml", StringComparison.OrdinalIgnoreCase) != true))
+            {
+                _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/xml"));
+            }
+        }
+
 
         /// <summary>
         /// Build a preconfigured request (user can add content, headers etc.)
@@ -42,7 +70,7 @@ namespace Kleer
             request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/xml");
             return request;
         }
-        
+
         /// <summary>
         /// Build a request with binary content (e.g. for uploading receipts or attachments).
         /// </summary>
@@ -73,7 +101,6 @@ namespace Kleer
             return request;
         }
 
-
         /// <summary>
         /// Send a request and return raw HTTP response.
         /// </summary>
@@ -102,7 +129,8 @@ namespace Kleer
 
         public void Dispose()
         {
-            _httpClient.Dispose();
+            if (_ownsHttpClient)
+                _httpClient.Dispose();
         }
 
         // Optional helper for XML serialization
