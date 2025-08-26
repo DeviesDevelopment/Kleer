@@ -28,21 +28,21 @@ xscgen Kleer/doc.xsd --namespace=Kleer.Models --output Kleer/Models
 
 KleerClient is a wrapper around HttpClient that simplifies working with the Kleer API.
 
-* It sets up the BaseAddress and authentication headers (X-Token).
+- It sets up the BaseAddress and authentication headers (X-Token).
 
-* It provides helpers to build requests:
+- It provides helpers to build requests:
 
-  * BuildRequest – bare request with default headers.
+  - BuildRequest – bare request with default headers.
 
-  * BuildXmlRequest<T> – request with XML-serialized content from a model.
+  - BuildXmlRequest<T> – request with XML-serialized content from a model.
 
-  * BuildBinaryRequest – request for file uploads (byte array or stream).
+  - BuildBinaryRequest – request for file uploads (byte array or stream).
 
-* It provides async send methods:
+- It provides async send methods:
 
-  * SendAsync(HttpRequestMessage) – returns raw HttpResponseMessage.
+  - SendAsync(HttpRequestMessage) – returns raw HttpResponseMessage.
 
-  * SendAsync<T>(HttpRequestMessage) – sends a request and deserializes the XML response into a model.
+  - SendAsync<T>(HttpRequestMessage) – sends a request and deserializes the XML response into a model.
 
 Example usage:
 
@@ -60,6 +60,26 @@ var request = KleerClient.BuildXmlRequest(HttpMethod.Post, "event/approve", data
 var result = await client.SendAsync<Ok>(request);
 ```
 
+Note that you might want to limit the number of connections to Kleer if you do many concurrent calls, in order to avoid `429 - Too many requests`.
+Here is an example of how to register the HttpClient if you are using a HttpClientFactory to create the client(s):
+
+```csharp
+services.AddHttpClient("Kleer", client =>
+{
+    client.Timeout = TimeSpan.FromMinutes(5);
+}).ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+{
+    MaxConnectionsPerServer = 10 // Or lower/higher depending on your service and deployment strategy
+})
+.AddPolicyHandler(HttpPolicyExtensions
+    .HandleTransientHttpError()
+    .OrResult(r => r.StatusCode == HttpStatusCode.TooManyRequests)
+    .WaitAndRetryAsync(
+        retryCount: 5,
+        sleepDurationProvider: retryAttempt =>
+            TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))));
+```
+
 ## KleerXmlSerializer
 
 The Kleer API’s schema is defined via XSD, and `xscgen` generates C# models decorated with `[XmlType]`.
@@ -67,12 +87,12 @@ However, `xscgen` also generates duplicate `*2Redefinition` classes for schema r
 
 **`KleerXmlSerializer`** works around this by:
 
-* Automatically renaming all `*2Redefinition` classes to unique names at runtime.
-* Caching `XmlSerializer` instances per type (and per assembly override set) for performance.
-* Serializing with settings tuned for the Kleer API:
-  * UTF-8 encoding without BOM.
-  * No XML declaration (`<?xml ...?>`).
-  * Suppressed `xmlns:xsi` / `xmlns:xsd` namespace attributes.
+- Automatically renaming all `*2Redefinition` classes to unique names at runtime.
+- Caching `XmlSerializer` instances per type (and per assembly override set) for performance.
+- Serializing with settings tuned for the Kleer API:
+  - UTF-8 encoding without BOM.
+  - No XML declaration (`<?xml ...?>`).
+  - Suppressed `xmlns:xsi` / `xmlns:xsd` namespace attributes.
 
 Typically, you do not need to use `KleerXmlSerializer` directly, it is used internally by `KleerClient` for both requests and responses.
 But you can use it if you just want to work with models outside of HTTP:
