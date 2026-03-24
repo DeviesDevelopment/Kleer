@@ -987,6 +987,14 @@
 		</xs:complexType>
 	</xs:element>
 
+	<xs:element name="payroll-run-bookkeep">
+		<xs:complexType>
+			<xs:complexContent>
+				<xs:extension base="payroll-run-bookkeep"/>
+			</xs:complexContent>
+		</xs:complexType>
+	</xs:element>
+
 	<xs:element name="payroll-transactions">
 		<xs:complexType>
 			<xs:complexContent>
@@ -2011,6 +2019,8 @@
 			<xs:element name="tax-table" type="xs:int"/>
 			<xs:element name="tax-table-column" type="xs:int"/>
 			<xs:element name="tax-percentage" type="xs:decimal"/>
+			<xs:element name="tax-percentage-valid-from" type="xs:date" minOccurs="0"/>
+			<xs:element name="tax-percentage-valid-to" type="xs:date" minOccurs="0"/>
 			<xs:element name="one-time-tax-percentage" type="xs:decimal"/>
 			<xs:element name="clearing-nr" type="xs:string"/>
 			<xs:element name="account-nr" type="xs:string"/>
@@ -2036,8 +2046,26 @@
 			<xs:element name="month-report-strategy" type="payroll-user-month-report-strategy"/>
 			<xs:element name="manager-user" type="user-reference"/>
 			<xs:element name="workplace-number" type="xs:string"/>
+			<xs:element name="workplace-custom-address" type="xs:string" minOccurs="0"/>
+			<xs:element name="workplace-custom-locality" type="xs:string" minOccurs="0"/>
 			<xs:element name="vacationFixedDebtPercentage" type="xs:decimal" minOccurs="0"/>
 
+			<!-- Vacation Balances -->
+			<xs:element name="vacation-entitlement" type="xs:decimal" minOccurs="0"/>
+			<xs:element name="vacation-paid-days" type="xs:decimal" minOccurs="0"/>
+			<xs:element name="vacation-paid-days-used" type="xs:decimal" minOccurs="0"/>
+			<xs:element name="vacation-advance-days" type="xs:decimal" minOccurs="0"/>
+			<xs:element name="vacation-advance-days-used" type="xs:decimal" minOccurs="0"/>
+			<xs:element name="vacation-advance-days-previous-year" type="xs:decimal" minOccurs="0"/>
+			<xs:element name="vacation-saved-days" type="xs:decimal" minOccurs="0"/>
+			<xs:element name="vacation-saved-days-year-1" type="xs:decimal" minOccurs="0"/>
+			<xs:element name="vacation-saved-days-year-2" type="xs:decimal" minOccurs="0"/>
+			<xs:element name="vacation-saved-days-year-3" type="xs:decimal" minOccurs="0"/>
+			<xs:element name="vacation-saved-days-year-4" type="xs:decimal" minOccurs="0"/>
+			<xs:element name="vacation-saved-days-year-5" type="xs:decimal" minOccurs="0"/>
+			<xs:element name="vacation-saved-days-used" type="xs:decimal" minOccurs="0"/>
+			<xs:element name="vacation-unpaid-days" type="xs:decimal" minOccurs="0"/>
+			<xs:element name="vacation-unpaid-days-used" type="xs:decimal" minOccurs="0"/>
 
 			<xs:element name="schedules">
 				<xs:complexType>
@@ -2111,6 +2139,22 @@
 			<xs:element name="tax-table" type="xs:int" minOccurs="0"/>
 			<xs:element name="tax-table-column" type="xs:int" minOccurs="0"/>
 			<xs:element name="tax-percentage" type="xs:decimal" minOccurs="0"/>
+			<xs:element name="tax-percentage-valid-from" type="xs:date" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						The date from which the tax percentage is valid.
+						Required when tax-percentage is set. If omitted, defaults to January 1st of the current year.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="tax-percentage-valid-to" type="xs:date" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						The date until which the tax percentage is valid.
+						Required when tax-percentage is set. If omitted, defaults to December 31st of the current year.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
 			<xs:element name="one-time-tax-percentage" type="xs:decimal" minOccurs="0"/>
 			<xs:element name="clearing-nr" type="xs:string" minOccurs="0"/>
 			<xs:element name="account-nr" type="xs:string" minOccurs="0"/>
@@ -2181,6 +2225,9 @@
 			<!-- Skip to leave current manager as is -->
 			<xs:element name="manager-user" type="user-reference" minOccurs="0"/>
 			<xs:element name="vacation-entitlement" type="vacation-entitlement" minOccurs="0"/>
+			<xs:element name="workplace-number" type="xs:string" minOccurs="0"/>
+			<xs:element name="workplace-custom-address" type="xs:string" minOccurs="0"/>
+			<xs:element name="workplace-custom-locality" type="xs:string" minOccurs="0"/>
 
 		</xs:sequence>
 	</xs:complexType>
@@ -2307,6 +2354,12 @@
 	</xs:complexType>
 
 	<xs:complexType name="payroll-run-pay">
+		<xs:sequence>
+			<xs:element name="payment-date" type="xs:date" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="payroll-run-bookkeep">
 		<xs:sequence>
 			<xs:element name="payment-date" type="xs:date" minOccurs="0"/>
 		</xs:sequence>
@@ -2955,6 +3008,7 @@
 					</xs:sequence>
 				</xs:complexType>
 			</xs:element>
+			<xs:element name="end-to-end-id" minOccurs="0" type="xs:string"/>
 		</xs:sequence>
 	</xs:complexType>
 
@@ -4325,6 +4379,7 @@
 			<xs:element name="your-reference" type="xs:string" minOccurs="0"/>
 			<xs:element name="our-reference" type="user-reference" minOccurs="0"/>
 			<xs:element name="delivery-type" type="delivery-method-type" minOccurs="0"/>
+			<xs:element name="email" type="xs:string" minOccurs="0"/>
 			<xs:element name="comment" type="xs:string"/>
 			<xs:element name="payment-days" type="xs:integer" minOccurs="0"/>
 			<xs:element name="po-nr" type="xs:string" minOccurs="0"/>
@@ -4352,6 +4407,20 @@
 						<xs:element name="field" type="field" minOccurs="0" maxOccurs="unbounded"/>
 					</xs:sequence>
 				</xs:complexType>
+			</xs:element>
+			<xs:element name="updated-user-key" type="xs:string" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						The key (UUID) of the user who last updated the project. Non-writable.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="updated-date" type="xs:dateTime" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						The date and time when the project was last updated. Non-writable.
+					</xs:documentation>
+				</xs:annotation>
 			</xs:element>
 		</xs:sequence>
 	</xs:complexType>
@@ -4409,12 +4478,12 @@
 						maxOccurs="unbounded"/>
 			<xs:element name="opening-date" type="xs:date" minOccurs="0"/>
 			<xs:element name="closing-date" type="xs:date" minOccurs="0">
-			<xs:annotation>
-				<xs:documentation>
-					Will not set status of project to closed, doing so is another operation.
-				</xs:documentation>
-			</xs:annotation>
-		</xs:element>
+				<xs:annotation>
+					<xs:documentation>
+						Will not set status of project to closed, doing so is another operation.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
 			<xs:element name="default-notes" type="xs:string" minOccurs="0"/>
 			<xs:element name="dimension-entries" type="dimensions-distribution" minOccurs="0">
 				<xs:annotation>
