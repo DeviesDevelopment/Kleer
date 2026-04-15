@@ -701,6 +701,46 @@
 		</xs:complexType>
 	</xs:element>
 
+	<xs:element name="client-project-readable-v2">
+		<xs:complexType>
+			<xs:complexContent>
+				<xs:extension base="client-project-readable-v2"/>
+			</xs:complexContent>
+		</xs:complexType>
+	</xs:element>
+
+	<xs:element name="client-project-readables-v2">
+		<xs:complexType>
+			<xs:complexContent>
+				<xs:extension base="client-project-readables-v2"/>
+			</xs:complexContent>
+		</xs:complexType>
+	</xs:element>
+
+	<xs:element name="client-project-activities-v2-writeable">
+		<xs:complexType>
+			<xs:complexContent>
+				<xs:extension base="client-project-activities-v2-writeable"/>
+			</xs:complexContent>
+		</xs:complexType>
+	</xs:element>
+
+	<xs:element name="client-project-users-v2-writeable">
+		<xs:complexType>
+			<xs:complexContent>
+				<xs:extension base="client-project-users-v2-writeable"/>
+			</xs:complexContent>
+		</xs:complexType>
+	</xs:element>
+
+	<xs:element name="client-project-prices-writeable">
+		<xs:complexType>
+			<xs:complexContent>
+				<xs:extension base="client-project-prices-writeable"/>
+			</xs:complexContent>
+		</xs:complexType>
+	</xs:element>
+
 	<xs:element name="user-authentication">
 		<xs:complexType>
 			<xs:complexContent>
@@ -4552,6 +4592,164 @@
 		<xs:sequence>
 			<xs:element name="user" type="user-reference"/>
 			<xs:element name="activity" type="client-project-user-activity" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<!-- ProjectV2 read types -->
+
+	<xs:complexType name="client-project-activity-price">
+		<xs:sequence>
+			<xs:element name="price" type="xs:long"/>
+			<xs:element name="valid-from" type="xs:date"/>
+			<xs:element name="type" type="xs:string"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="client-project-activity-v2">
+		<xs:sequence>
+			<xs:element name="activity" type="activity-reference"/>
+			<xs:element name="key" type="xs:string"/>
+			<xs:element name="name" type="xs:string"/>
+			<xs:element name="description" type="xs:string" minOccurs="0"/>
+			<xs:element name="invoice-description" type="xs:string" minOccurs="0"/>
+			<xs:element name="project-specific" type="xs:boolean"/>
+			<xs:element name="payroll-cost-dimension-strategy" type="xs:string" minOccurs="0"/>
+			<xs:element name="price" type="client-project-activity-price" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="client-project-user-activity-v2">
+		<xs:sequence>
+			<xs:element name="key" type="xs:string"/>
+			<xs:element name="project-activity-key" type="xs:string"/>
+			<xs:element name="dimension-user-percentage" type="xs:decimal" minOccurs="0"/>
+			<xs:element name="price" type="client-project-activity-price" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="client-project-user-v2">
+		<xs:sequence>
+			<xs:element name="user" type="user-reference"/>
+			<xs:element name="activity-v2" type="client-project-user-activity-v2" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="client-project-readables-v2">
+		<xs:sequence>
+			<xs:element name="client-project-readable-v2" type="client-project-readable-v2" minOccurs="0"
+						maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="client-project-readable-v2">
+		<xs:sequence>
+			<xs:element name="id" type="client-project-reference"/>
+			<xs:element name="client" type="client-reference" minOccurs="0"/>
+			<xs:element name="broker-client" type="client-reference" minOccurs="0"/>
+			<xs:element name="fixed-price" type="xs:boolean"/>
+			<xs:element name="number" type="xs:string"/>
+			<xs:element name="name" type="xs:string"/>
+			<xs:element name="currency-type" type="xs:string"/>
+			<xs:element name="active" type="xs:boolean"/>
+			<xs:element name="your-reference" type="xs:string" minOccurs="0"/>
+			<xs:element name="our-reference" type="user-reference" minOccurs="0"/>
+			<xs:element name="delivery-type" type="delivery-method-type" minOccurs="0"/>
+			<xs:element name="email" type="xs:string" minOccurs="0"/>
+			<xs:element name="comment" type="xs:string"/>
+			<xs:element name="payment-days" type="xs:integer" minOccurs="0"/>
+			<xs:element name="po-nr" type="xs:string" minOccurs="0"/>
+			<xs:element name="budget-hours" type="xs:decimal"/>
+			<xs:element name="budget-amount" type="xs:long"/>
+			<xs:element name="incoming-invoiced-amount" type="xs:long"/>
+			<xs:element name="incoming-invoiced-vat-amount" type="xs:long"/>
+			<xs:element name="activity-v2" type="client-project-activity-v2" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="user-v2" type="client-project-user-v2" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="leads" type="lead" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="fixed-price-planned-invoice" type="fixed-price-planned-invoice" minOccurs="0"
+						maxOccurs="unbounded"/>
+			<xs:element name="write-off" type="client-project-write-off" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="dimension-entry" type="dimension-entry-reference" minOccurs="0"/>
+			<xs:element name="status" type="client-project-status-type"/>
+			<xs:element name="opening-date" type="xs:date" minOccurs="0"/>
+			<xs:element name="closing-date" type="xs:date" minOccurs="0"/>
+			<xs:element name="dimensions" type="dimensions-distribution" minOccurs="0"/>
+			<xs:element name="default-notes" type="xs:string" minOccurs="0"/>
+			<xs:element name="fields" minOccurs="0">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="field" type="field" minOccurs="0" maxOccurs="unbounded"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="updated-user-key" type="xs:string" minOccurs="0"/>
+			<xs:element name="updated-date" type="xs:dateTime" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<!-- ProjectV2 write types -->
+
+	<xs:complexType name="client-project-user-activity-v2-writeable">
+		<xs:sequence>
+			<xs:element name="name" type="xs:string"/>
+			<xs:element name="dimension-user-percentage" type="xs:decimal" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="client-project-activity-v2-writeable">
+		<xs:sequence>
+			<xs:element name="key" type="xs:string" minOccurs="0"/>
+			<xs:element name="activity" type="activity-reference"/>
+			<xs:element name="name" type="xs:string"/>
+			<xs:element name="description" type="xs:string" minOccurs="0"/>
+			<xs:element name="invoice-description" type="xs:string" minOccurs="0"/>
+			<xs:element name="payroll-cost-dimension-strategy" type="xs:string" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="client-project-user-v2-writeable">
+		<xs:sequence>
+			<xs:element name="user" type="user-reference"/>
+			<xs:element name="activity" type="client-project-user-activity-v2-writeable" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="client-project-activities-v2-writeable">
+		<xs:sequence>
+			<xs:element name="activity" type="client-project-activity-v2-writeable" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="client-project-users-v2-writeable">
+		<xs:sequence>
+			<xs:element name="user" type="client-project-user-v2-writeable" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<!-- ProjectV2 price write types -->
+
+	<xs:complexType name="client-project-activity-price-writeable">
+		<xs:sequence>
+			<xs:element name="key" type="xs:string"/>
+			<xs:element name="price" type="xs:long"/>
+			<xs:element name="valid-from" type="xs:date"/>
+			<xs:element name="type" type="xs:string"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="client-project-user-activity-price-writeable">
+		<xs:sequence>
+			<xs:element name="key" type="xs:string"/>
+			<xs:element name="user" type="user-reference"/>
+			<xs:element name="price" type="xs:long"/>
+			<xs:element name="valid-from" type="xs:date"/>
+			<xs:element name="type" type="xs:string"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="client-project-prices-writeable">
+		<xs:sequence>
+			<xs:element name="activity-price" type="client-project-activity-price-writeable" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="user-activity-price" type="client-project-user-activity-price-writeable" minOccurs="0" maxOccurs="unbounded"/>
 		</xs:sequence>
 	</xs:complexType>
 
