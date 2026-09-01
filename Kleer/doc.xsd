@@ -821,6 +821,14 @@
 		</xs:complexType>
 	</xs:element>
 
+	<xs:element name="car-readable">
+		<xs:complexType>
+			<xs:complexContent>
+				<xs:extension base="car-readable"/>
+			</xs:complexContent>
+		</xs:complexType>
+	</xs:element>
+
 	<xs:element name="expense-entry-writable">
 		<xs:complexType>
 			<xs:complexContent>
@@ -1253,10 +1261,12 @@
 		<xs:sequence>
 			<xs:element name="id" type="xs:int"/>
 			<xs:element name="expense-nr" type="xs:int" minOccurs="0"/>
-			<xs:element name="expense-file" type="expense-file-reference"/>
+			<!-- expense-file, company-card, expense-type and persons are only present for regular (receipt) entries.
+			     Mileage and allowance entries instead carry the expense-mileage / expense-allowance element below. -->
+			<xs:element name="expense-file" type="expense-file-reference" minOccurs="0"/>
 			<xs:element name="company-card" type="company-card-readable" minOccurs="0"/>
-			<xs:element name="expense-type" type="expense-type-readable"/>
-			<xs:element name="persons">
+			<xs:element name="expense-type" type="expense-type-readable" minOccurs="0"/>
+			<xs:element name="persons" minOccurs="0">
 				<xs:complexType>
 					<xs:sequence>
 						<xs:element name="name" type="xs:string" maxOccurs="unbounded"/>
@@ -1309,6 +1319,117 @@
 						</xs:element>
 					</xs:sequence>
 				</xs:complexType>
+			</xs:element>
+			<!-- Present only for mileage entries (milersättning). -->
+			<xs:element name="expense-mileage" type="expense-mileage-readable" minOccurs="0"/>
+			<!-- Present only for per-diem / allowance entries (traktamente). -->
+			<xs:element name="expense-allowance" type="expense-allowance-readable" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="expense-mileage-readable">
+		<xs:sequence>
+			<xs:element name="type" type="xs:string">
+				<xs:annotation>
+					<xs:documentation>Mileage entry type. One of: "Single" (a single trip, with start/end descriptions and optional coordinates) or "Batch" (an aggregated driving-logbook entry, where start/end descriptions may be absent).</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="amount-taxfree" type="xs:long">
+				<xs:annotation>
+					<xs:documentation>Tax-free reimbursement amount for the trip, in cents.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="amount-taxed" type="xs:long">
+				<xs:annotation>
+					<xs:documentation>Taxable reimbursement amount for the trip, in cents.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="round-trip" type="xs:boolean"/>
+			<xs:element name="distance-one-way-km" type="xs:decimal">
+				<xs:annotation>
+					<xs:documentation>One-way travel distance, in kilometres.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="distance-total-km" type="xs:decimal">
+				<xs:annotation>
+					<xs:documentation>Total travel distance in kilometres; equals distance-one-way-km, doubled when round-trip is true.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="start-description" type="xs:string" minOccurs="0"/>
+			<xs:element name="end-description" type="xs:string" minOccurs="0"/>
+			<xs:element name="start-latitude" type="xs:decimal" minOccurs="0"/>
+			<xs:element name="start-longitude" type="xs:decimal" minOccurs="0"/>
+			<xs:element name="end-latitude" type="xs:decimal" minOccurs="0"/>
+			<xs:element name="end-longitude" type="xs:decimal" minOccurs="0"/>
+			<xs:element name="car-id" type="xs:int" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="expense-allowance-readable">
+		<xs:sequence>
+			<xs:element name="purpose" type="xs:string"/>
+			<xs:element name="trip-origin-description" type="xs:string"/>
+			<xs:element name="domestic" type="xs:boolean"/>
+			<xs:element name="breakfast-payment" type="xs:string"/>
+			<xs:element name="lunch-payment" type="xs:string"/>
+			<xs:element name="dinner-payment" type="xs:string"/>
+			<xs:element name="night-allowance" type="xs:boolean"/>
+			<xs:element name="benefits-amount" type="xs:long">
+				<xs:annotation>
+					<xs:documentation>Taxable benefit (förmån) for provided meals, in cents.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="days">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="day" type="expense-allowance-day-readable" minOccurs="0" maxOccurs="unbounded"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="trips">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="trip" type="expense-allowance-trip-readable" minOccurs="0" maxOccurs="unbounded"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="expense-allowance-day-readable">
+		<xs:sequence>
+			<xs:element name="date" type="xs:date"/>
+			<xs:element name="breakfast-payment" type="xs:string"/>
+			<xs:element name="lunch-payment" type="xs:string"/>
+			<xs:element name="dinner-payment" type="xs:string"/>
+			<xs:element name="night-allowance" type="xs:boolean"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="expense-allowance-trip-readable">
+		<xs:sequence>
+			<xs:element name="start-time" type="xs:dateTime"/>
+			<xs:element name="end-time" type="xs:dateTime"/>
+			<xs:element name="destination-country-code" type="xs:string"/>
+			<xs:element name="destination-description" type="xs:string" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="car-readable">
+		<xs:annotation>
+			<xs:documentation>A user's registered car (the car-id returned in expense-mileage). Requires payroll read access.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="id" type="xs:int"/>
+			<xs:element name="registration-number" type="xs:string" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>The car's registration number. Absent if none is registered.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="car-code" type="xs:string" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Skatteverket model code (Modellkod) for benefit cars; format YY+model+nr (e.g. 24ABC123). Absent if not set.</xs:documentation>
+				</xs:annotation>
 			</xs:element>
 		</xs:sequence>
 	</xs:complexType>
@@ -3049,6 +3170,20 @@
 				</xs:complexType>
 			</xs:element>
 			<xs:element name="end-to-end-id" minOccurs="0" type="xs:string"/>
+			<xs:element name="properties" minOccurs="0">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="property" type="bank-transaction-property" minOccurs="0" maxOccurs="unbounded"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="bank-transaction-property">
+		<xs:sequence>
+			<xs:element name="name" type="xs:string"/>
+			<xs:element name="value" type="xs:string"/>
 		</xs:sequence>
 	</xs:complexType>
 
@@ -3189,6 +3324,18 @@
 		</xs:restriction>
 	</xs:simpleType>
 
+	<xs:simpleType name="client-invoice-status-type">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="WrittenOffAndPaid"/>
+			<xs:enumeration value="WrittenOff"/>
+			<xs:enumeration value="Paid"/>
+			<xs:enumeration value="Unpaid"/>
+			<xs:enumeration value="Credited"/>
+			<xs:enumeration value="ReservedAsUncertain"/>
+			<xs:enumeration value="PartiallyPaid"/>
+		</xs:restriction>
+	</xs:simpleType>
+
 	<xs:complexType name="client-invoice">
 		<xs:sequence>
 
@@ -3321,6 +3468,9 @@
 
 			<!-- In cent, will be 0 for non-certified invoices. Read-only -->
 			<xs:element name="remaining" type="xs:long"/>
+
+			<!-- Computed payment/write-off status of the invoice. Read-only -->
+			<xs:element name="status" type="client-invoice-status-type" minOccurs="0"/>
 
 			<xs:element name="last-payment-date" type="xs:date" minOccurs="0">
 				<xs:annotation>
@@ -5236,6 +5386,7 @@
 			<xs:enumeration value="ClientInvoiceCreate"/>
 			<xs:enumeration value="ClientInvoiceCertifyOwn"/>
 			<xs:enumeration value="ClientInvoiceOwn"/>
+			<xs:enumeration value="ClientInvoicePay"/>
 			<xs:enumeration value="ClientProjectOwn"/>
 			<xs:enumeration value="CustomerManagerSeb"/>
 			<xs:enumeration value="DimensionOwn"/>
