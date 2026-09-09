@@ -2383,8 +2383,22 @@
 					</xs:sequence>
 				</xs:complexType>
 			</xs:element>
-			<!-- Skip to leave current manager as is -->
-			<xs:element name="manager-user" type="user-reference" minOccurs="0"/>
+			<xs:element name="manager-user" type="user-reference" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						Sets the manager of this payroll user. Skip to leave the current manager as is.
+						The id must reference an existing user in this company; an omitted, null or zero id
+						is rejected. Use remove-manager-user to remove the current manager.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="remove-manager-user" type="xs:boolean" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						Set to true to remove the current manager. Mutually exclusive with manager-user.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
 			<xs:element name="vacation-entitlement" type="vacation-entitlement" minOccurs="0"/>
 			<xs:element name="workplace-number" type="xs:string" minOccurs="0"/>
 			<xs:element name="workplace-custom-address" type="xs:string" minOccurs="0"/>
@@ -4747,11 +4761,47 @@
 
 	<!-- ProjectV2 read types -->
 
+	<xs:complexType name="company-reference">
+		<xs:sequence>
+			<xs:element name="id" type="xs:int"/>
+		</xs:sequence>
+	</xs:complexType>
+
 	<xs:complexType name="client-project-activity-price">
 		<xs:sequence>
 			<xs:element name="price" type="xs:long"/>
 			<xs:element name="valid-from" type="xs:date"/>
-			<xs:element name="type" type="xs:string"/>
+			<xs:element name="type" type="xs:string">
+				<xs:annotation>
+					<xs:documentation>
+						One of Client, Supplier, Internal or SalaryBasis. Note that Internal is the
+						project's own internal price. It is NOT the group's internal invoice price used
+						when a master company invoices its subsidiaries for work on a group project —
+						that price is per subsidiary and is read and written through group-internal-price.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="group-internal-price">
+		<xs:annotation>
+			<xs:documentation>
+				The group's internal invoice price for one subsidiary company, effective from valid-from.
+				This is what the subsidiary invoices the master for work on a group project.
+
+				It is a per-subsidiary OVERRIDE, not a separate kind of price. Where no override exists for
+				a subsidiary, that same invoiced price comes from the master activity's own price of type
+				"Internal" if one is set, and from its "Client" price otherwise. So setting type=Internal on
+				client-project-activity-price does affect what subsidiaries are invoiced — for every
+				subsidiary that has no override here. Setting it does not change what a subsidiary with an
+				override is invoiced, and reading it does not tell you the overridden value.
+			</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="subsidiary-company" type="company-reference"/>
+			<xs:element name="price" type="xs:long"/>
+			<xs:element name="valid-from" type="xs:date"/>
 		</xs:sequence>
 	</xs:complexType>
 
@@ -4765,6 +4815,23 @@
 			<xs:element name="project-specific" type="xs:boolean"/>
 			<xs:element name="payroll-cost-dimension-strategy" type="xs:string" minOccurs="0"/>
 			<xs:element name="price" type="client-project-activity-price" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="group-internal-price" type="group-internal-price" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>
+						The group's per-subsidiary internal invoice prices for this activity, for every
+						subsidiary currently in the project, including historical and future-dated rows. A
+						stored price whose subsidiary has since left the project is not reported, because the
+						company it belongs to can no longer be named in the response.
+
+						Only populated when reading a single project (GET /client-project/{clientProjectId})
+						that is the master project of a group project in a company with cross-company projects
+						active, and only for a caller with project read access; omitted from list responses
+						and for all other projects. Note the consequence of that last condition: absence of
+						this element means "not visible to you" as well as "none set", so do not read an empty
+						result as proof that no internal invoice price exists.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
 		</xs:sequence>
 	</xs:complexType>
 
@@ -4882,7 +4949,16 @@
 			<xs:element name="key" type="xs:string"/>
 			<xs:element name="price" type="xs:long"/>
 			<xs:element name="valid-from" type="xs:date"/>
-			<xs:element name="type" type="xs:string"/>
+			<xs:element name="type" type="xs:string">
+				<xs:annotation>
+					<xs:documentation>
+						One of Client, Supplier, Internal or SalaryBasis. Note that Internal sets the
+						project's own internal price. It does NOT set the group's internal invoice price
+						used when a master company invoices its subsidiaries for work on a group project —
+						use activity-group-internal-price for that.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
 		</xs:sequence>
 	</xs:complexType>
 
@@ -4892,14 +4968,67 @@
 			<xs:element name="user" type="user-reference"/>
 			<xs:element name="price" type="xs:long"/>
 			<xs:element name="valid-from" type="xs:date"/>
-			<xs:element name="type" type="xs:string"/>
+			<xs:element name="type" type="xs:string">
+				<xs:annotation>
+					<xs:documentation>
+						One of Client, Supplier, Internal or SalaryBasis. As for activity-price, Internal
+						is the project's own internal price and not the group's internal invoice price.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
 		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="client-project-activity-group-internal-price-writeable">
+		<xs:annotation>
+			<xs:documentation>
+				The group's per-subsidiary internal invoice prices for one project activity, identified by
+				its activity key. May only be sent by the master company for the master project of a group
+				project in a company with cross-company projects active; any other caller is rejected.
+
+				By default only the subsidiaries named in the payload are touched, and nothing is deleted.
+				Activities not listed are left untouched either way.
+
+				Set replace-all="true" to make the payload the AUTHORITATIVE SET for the activity instead —
+				the behaviour the price dialog has, which is safe there because the dialog always renders and
+				resends every subsidiary. Then a subsidiary of the project without an entry dated today or
+				earlier has EVERY row dated today or earlier removed — its whole price history, not only the
+				price in force — and falls back to the price described on group-internal-price. Future-dated
+				rows are never removed by omission.
+
+				Deleting history changes past billing, not only future billing: work is priced as of the
+				date it was reported, so removing a row that was in force in March changes what March work
+				still to be invoiced costs. That is why it is opt-in here: an integration sending a partial
+				set has no way to know what it removed.
+
+				Each entry upserts on (activity, subsidiary, valid-from). A future-dated entry replaces any
+				existing future-dated price for that subsidiary, because a subsidiary can have at most one
+				future price per activity.
+
+				Under replace-all, note what this means for scheduling, because it is the case most easily
+				got wrong: an entry dated in the future does not count as a price for today. Scheduling a
+				rise for one subsidiary by sending only that one future-dated entry therefore removes the
+				current price of EVERY subsidiary on the activity, including the one being scheduled, until
+				the new date arrives. To schedule a change and keep today's prices, send each subsidiary's current entry
+				alongside the future one. The price dialog does this for you; over the API it is explicit.
+
+				The mirror image is worth knowing too: an entry dated in the past DOES count as a price for
+				today, so it protects the subsidiary from clearing — but it does not change what is charged
+				today if a later row already exists. Such a call is accepted and changes nothing visible.
+			</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="key" type="xs:string"/>
+			<xs:element name="group-internal-price" type="group-internal-price" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attribute name="replace-all" type="xs:boolean"/>
 	</xs:complexType>
 
 	<xs:complexType name="client-project-prices-writeable">
 		<xs:sequence>
 			<xs:element name="activity-price" type="client-project-activity-price-writeable" minOccurs="0" maxOccurs="unbounded"/>
 			<xs:element name="user-activity-price" type="client-project-user-activity-price-writeable" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="activity-group-internal-price" type="client-project-activity-group-internal-price-writeable" minOccurs="0" maxOccurs="unbounded"/>
 		</xs:sequence>
 	</xs:complexType>
 

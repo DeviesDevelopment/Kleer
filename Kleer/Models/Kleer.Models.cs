@@ -5628,8 +5628,29 @@ namespace Kleer.Models
             }
         }
         
+        /// <summary>
+        /// <para>Sets the manager of this payroll user. Skip to leave the current manager as is.
+        ///						The id must reference an existing user in this company; an omitted, null or zero id
+        ///						is rejected. Use remove-manager-user to remove the current manager.</para>
+        /// </summary>
+        [System.ComponentModel.DescriptionAttribute(("Sets the manager of this payroll user. Skip to leave the current manager as is. T" +
+            "he id must reference an existing user in this company; an omitted, null or zero " +
+            "id is rejected. Use remove-manager-user to remove the current manager."))]
         [System.Xml.Serialization.XmlElementAttribute("manager-user", Form=System.Xml.Schema.XmlSchemaForm.Unqualified)]
         public UserReference ManagerUser { get; set; }
+        
+        /// <summary>
+        /// <para>Set to true to remove the current manager. Mutually exclusive with manager-user.</para>
+        /// </summary>
+        [System.ComponentModel.DescriptionAttribute("Set to true to remove the current manager. Mutually exclusive with manager-user.")]
+        [System.Xml.Serialization.XmlElementAttribute("remove-manager-user", Form=System.Xml.Schema.XmlSchemaForm.Unqualified)]
+        public bool RemoveManagerUser { get; set; }
+        
+        /// <summary>
+        /// <para xml:lang="en">Gets or sets a value indicating whether the RemoveManagerUser property is specified.</para>
+        /// </summary>
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        public bool RemoveManagerUserSpecified { get; set; }
         
         [System.Xml.Serialization.XmlElementAttribute("vacation-entitlement", Form=System.Xml.Schema.XmlSchemaForm.Unqualified)]
         public VacationEntitlement VacationEntitlement { get; set; }
@@ -15792,6 +15813,19 @@ namespace Kleer.Models
     
     [System.CodeDom.Compiler.GeneratedCodeAttribute("XmlSchemaClassGenerator", "3.0.1356.0")]
     [System.SerializableAttribute()]
+    [System.Xml.Serialization.XmlTypeAttribute("company-reference", Namespace="")]
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    public partial class CompanyReference
+    {
+        
+        [System.ComponentModel.DataAnnotations.RequiredAttribute(AllowEmptyStrings=true)]
+        [System.Xml.Serialization.XmlElementAttribute("id", Form=System.Xml.Schema.XmlSchemaForm.Unqualified)]
+        public int Id { get; set; }
+    }
+    
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("XmlSchemaClassGenerator", "3.0.1356.0")]
+    [System.SerializableAttribute()]
     [System.Xml.Serialization.XmlTypeAttribute("client-project-activity-price", Namespace="")]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
@@ -15806,9 +15840,49 @@ namespace Kleer.Models
         [System.Xml.Serialization.XmlElementAttribute("valid-from", Form=System.Xml.Schema.XmlSchemaForm.Unqualified, DataType="date")]
         public System.DateTime ValidFrom { get; set; }
         
+        /// <summary>
+        /// <para>One of Client, Supplier, Internal or SalaryBasis. Note that Internal is the
+        ///						project's own internal price. It is NOT the group's internal invoice price used
+        ///						when a master company invoices its subsidiaries for work on a group project —
+        ///						that price is per subsidiary and is read and written through group-internal-price.</para>
+        /// </summary>
+        [System.ComponentModel.DescriptionAttribute(@"One of Client, Supplier, Internal or SalaryBasis. Note that Internal is the project's own internal price. It is NOT the group's internal invoice price used when a master company invoices its subsidiaries for work on a group project — that price is per subsidiary and is read and written through group-internal-price.")]
         [System.ComponentModel.DataAnnotations.RequiredAttribute(AllowEmptyStrings=true)]
         [System.Xml.Serialization.XmlElementAttribute("type", Form=System.Xml.Schema.XmlSchemaForm.Unqualified)]
         public string Type { get; set; }
+    }
+    
+    /// <summary>
+    /// <para>The group's internal invoice price for one subsidiary company, effective from valid-from.
+    ///				This is what the subsidiary invoices the master for work on a group project.
+    ///
+    ///				It is a per-subsidiary OVERRIDE, not a separate kind of price. Where no override exists for
+    ///				a subsidiary, that same invoiced price comes from the master activity's own price of type
+    ///				"Internal" if one is set, and from its "Client" price otherwise. So setting type=Internal on
+    ///				client-project-activity-price does affect what subsidiaries are invoiced — for every
+    ///				subsidiary that has no override here. Setting it does not change what a subsidiary with an
+    ///				override is invoiced, and reading it does not tell you the overridden value.</para>
+    /// </summary>
+    [System.ComponentModel.DescriptionAttribute(@"The group's internal invoice price for one subsidiary company, effective from valid-from. This is what the subsidiary invoices the master for work on a group project. It is a per-subsidiary OVERRIDE, not a separate kind of price. Where no override exists for a subsidiary, that same invoiced price comes from the master activity's own price of type ""Internal"" if one is set, and from its ""Client"" price otherwise. So setting type=Internal on client-project-activity-price does affect what subsidiaries are invoiced — for every subsidiary that has no override here. Setting it does not change what a subsidiary with an override is invoiced, and reading it does not tell you the overridden value.")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("XmlSchemaClassGenerator", "3.0.1356.0")]
+    [System.SerializableAttribute()]
+    [System.Xml.Serialization.XmlTypeAttribute("group-internal-price", Namespace="")]
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    public partial class GroupInternalPrice
+    {
+        
+        [System.ComponentModel.DataAnnotations.RequiredAttribute(AllowEmptyStrings=true)]
+        [System.Xml.Serialization.XmlElementAttribute("subsidiary-company", Form=System.Xml.Schema.XmlSchemaForm.Unqualified)]
+        public CompanyReference SubsidiaryCompany { get; set; }
+        
+        [System.ComponentModel.DataAnnotations.RequiredAttribute(AllowEmptyStrings=true)]
+        [System.Xml.Serialization.XmlElementAttribute("price", Form=System.Xml.Schema.XmlSchemaForm.Unqualified)]
+        public long Price { get; set; }
+        
+        [System.ComponentModel.DataAnnotations.RequiredAttribute(AllowEmptyStrings=true)]
+        [System.Xml.Serialization.XmlElementAttribute("valid-from", Form=System.Xml.Schema.XmlSchemaForm.Unqualified, DataType="date")]
+        public System.DateTime ValidFrom { get; set; }
     }
     
     [System.CodeDom.Compiler.GeneratedCodeAttribute("XmlSchemaClassGenerator", "3.0.1356.0")]
@@ -15878,6 +15952,49 @@ namespace Kleer.Models
         public ClientProjectActivityV2()
         {
             this._price = new System.Collections.ObjectModel.Collection<ClientProjectActivityPrice>();
+            this._groupInternalPrice = new System.Collections.ObjectModel.Collection<GroupInternalPrice>();
+        }
+        
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        private System.Collections.ObjectModel.Collection<GroupInternalPrice> _groupInternalPrice;
+        
+        /// <summary>
+        /// <para>The group's per-subsidiary internal invoice prices for this activity, for every
+        ///						subsidiary currently in the project, including historical and future-dated rows. A
+        ///						stored price whose subsidiary has since left the project is not reported, because the
+        ///						company it belongs to can no longer be named in the response.
+        ///
+        ///						Only populated when reading a single project (GET /client-project/{clientProjectId})
+        ///						that is the master project of a group project in a company with cross-company projects
+        ///						active, and only for a caller with project read access; omitted from list responses
+        ///						and for all other projects. Note the consequence of that last condition: absence of
+        ///						this element means "not visible to you" as well as "none set", so do not read an empty
+        ///						result as proof that no internal invoice price exists.</para>
+        /// </summary>
+        [System.ComponentModel.DescriptionAttribute(@"The group's per-subsidiary internal invoice prices for this activity, for every subsidiary currently in the project, including historical and future-dated rows. A stored price whose subsidiary has since left the project is not reported, because the company it belongs to can no longer be named in the response. Only populated when reading a single project (GET /client-project/{clientProjectId}) that is the master project of a group project in a company with cross-company projects active, and only for a caller with project read access; omitted from list responses and for all other projects. Note the consequence of that last condition: absence of this element means ""not visible to you"" as well as ""none set"", so do not read an empty result as proof that no internal invoice price exists.")]
+        [System.Xml.Serialization.XmlElementAttribute("group-internal-price", Form=System.Xml.Schema.XmlSchemaForm.Unqualified)]
+        public System.Collections.ObjectModel.Collection<GroupInternalPrice> GroupInternalPrice
+        {
+            get
+            {
+                return _groupInternalPrice;
+            }
+            private set
+            {
+                _groupInternalPrice = value;
+            }
+        }
+        
+        /// <summary>
+        /// <para xml:lang="en">Gets a value indicating whether the GroupInternalPrice collection is empty.</para>
+        /// </summary>
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        public bool GroupInternalPriceSpecified
+        {
+            get
+            {
+                return (this.GroupInternalPrice.Count != 0);
+            }
         }
     }
     
@@ -16631,6 +16748,13 @@ namespace Kleer.Models
         [System.Xml.Serialization.XmlElementAttribute("valid-from", Form=System.Xml.Schema.XmlSchemaForm.Unqualified, DataType="date")]
         public System.DateTime ValidFrom { get; set; }
         
+        /// <summary>
+        /// <para>One of Client, Supplier, Internal or SalaryBasis. Note that Internal sets the
+        ///						project's own internal price. It does NOT set the group's internal invoice price
+        ///						used when a master company invoices its subsidiaries for work on a group project —
+        ///						use activity-group-internal-price for that.</para>
+        /// </summary>
+        [System.ComponentModel.DescriptionAttribute(@"One of Client, Supplier, Internal or SalaryBasis. Note that Internal sets the project's own internal price. It does NOT set the group's internal invoice price used when a master company invoices its subsidiaries for work on a group project — use activity-group-internal-price for that.")]
         [System.ComponentModel.DataAnnotations.RequiredAttribute(AllowEmptyStrings=true)]
         [System.Xml.Serialization.XmlElementAttribute("type", Form=System.Xml.Schema.XmlSchemaForm.Unqualified)]
         public string Type { get; set; }
@@ -16660,9 +16784,137 @@ namespace Kleer.Models
         [System.Xml.Serialization.XmlElementAttribute("valid-from", Form=System.Xml.Schema.XmlSchemaForm.Unqualified, DataType="date")]
         public System.DateTime ValidFrom { get; set; }
         
+        /// <summary>
+        /// <para>One of Client, Supplier, Internal or SalaryBasis. As for activity-price, Internal
+        ///						is the project's own internal price and not the group's internal invoice price.</para>
+        /// </summary>
+        [System.ComponentModel.DescriptionAttribute(("One of Client, Supplier, Internal or SalaryBasis. As for activity-price, Internal" +
+            " is the project\'s own internal price and not the group\'s internal invoice price."))]
         [System.ComponentModel.DataAnnotations.RequiredAttribute(AllowEmptyStrings=true)]
         [System.Xml.Serialization.XmlElementAttribute("type", Form=System.Xml.Schema.XmlSchemaForm.Unqualified)]
         public string Type { get; set; }
+    }
+    
+    /// <summary>
+    /// <para>The group's per-subsidiary internal invoice prices for one project activity, identified by
+    ///				its activity key. May only be sent by the master company for the master project of a group
+    ///				project in a company with cross-company projects active; any other caller is rejected.
+    ///
+    ///				By default only the subsidiaries named in the payload are touched, and nothing is deleted.
+    ///				Activities not listed are left untouched either way.
+    ///
+    ///				Set replace-all="true" to make the payload the AUTHORITATIVE SET for the activity instead —
+    ///				the behaviour the price dialog has, which is safe there because the dialog always renders and
+    ///				resends every subsidiary. Then a subsidiary of the project without an entry dated today or
+    ///				earlier has EVERY row dated today or earlier removed — its whole price history, not only the
+    ///				price in force — and falls back to the price described on group-internal-price. Future-dated
+    ///				rows are never removed by omission.
+    ///
+    ///				Deleting history changes past billing, not only future billing: work is priced as of the
+    ///				date it was reported, so removing a row that was in force in March changes what March work
+    ///				still to be invoiced costs. That is why it is opt-in here: an integration sending a partial
+    ///				set has no way to know what it removed.
+    ///
+    ///				Each entry upserts on (activity, subsidiary, valid-from). A future-dated entry replaces any
+    ///				existing future-dated price for that subsidiary, because a subsidiary can have at most one
+    ///				future price per activity.
+    ///
+    ///				Under replace-all, note what this means for scheduling, because it is the case most easily
+    ///				got wrong: an entry dated in the future does not count as a price for today. Scheduling a
+    ///				rise for one subsidiary by sending only that one future-dated entry therefore removes the
+    ///				current price of EVERY subsidiary on the activity, including the one being scheduled, until
+    ///				the new date arrives. To schedule a change and keep today's prices, send each subsidiary's current entry
+    ///				alongside the future one. The price dialog does this for you; over the API it is explicit.
+    ///
+    ///				The mirror image is worth knowing too: an entry dated in the past DOES count as a price for
+    ///				today, so it protects the subsidiary from clearing — but it does not change what is charged
+    ///				today if a later row already exists. Such a call is accepted and changes nothing visible.</para>
+    /// </summary>
+    [System.ComponentModel.DescriptionAttribute(("The group\'s per-subsidiary internal invoice prices for one project activity, iden" +
+        "tified by its activity key. May only be sent by the master company for the maste" +
+        "r project of a group project in a company with cross-company projects active; an" +
+        "y other caller is rejected. By default only the subsidiaries named in the payloa" +
+        "d are touched, and nothing is deleted. Activities not listed are left untouched " +
+        "either way. Set replace-all=\"true\" to make the payload the AUTHORITATIVE SET for" +
+        " the activity instead — the behaviour the price dialog has, which is safe there " +
+        "because the dialog always renders and resends every subsidiary. Then a subsidiar" +
+        "y of the project without an entry dated today or earlier has EVERY row dated tod" +
+        "ay or earlier removed — its whole price history, not only the price in force — a" +
+        "nd falls back to the price described on group-internal-price. Future-dated rows " +
+        "are never removed by omission. Deleting history changes past billing, not only f" +
+        "uture billing: work is priced as of the date it was reported, so removing a row " +
+        "that was in force in March changes what March work still to be invoiced costs. T" +
+        "hat is why it is opt-in here: an integration sending a partial set has no way to" +
+        " know what it removed. Each entry upserts on (activity, subsidiary, valid-from)." +
+        " A future-dated entry replaces any existing future-dated price for that subsidia" +
+        "ry, because a subsidiary can have at most one future price per activity. Under r" +
+        "eplace-all, note what this means for scheduling, because it is the case most eas" +
+        "ily got wrong: an entry dated in the future does not count as a price for today." +
+        " Scheduling a rise for one subsidiary by sending only that one future-dated entr" +
+        "y therefore removes the current price of EVERY subsidiary on the activity, inclu" +
+        "ding the one being scheduled, until the new date arrives. To schedule a change a" +
+        "nd keep today\'s prices, send each subsidiary\'s current entry alongside the futur" +
+        "e one. The price dialog does this for you; over the API it is explicit. The mirr" +
+        "or image is worth knowing too: an entry dated in the past DOES count as a price " +
+        "for today, so it protects the subsidiary from clearing — but it does not change " +
+        "what is charged today if a later row already exists. Such a call is accepted and" +
+        " changes nothing visible."))]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("XmlSchemaClassGenerator", "3.0.1356.0")]
+    [System.SerializableAttribute()]
+    [System.Xml.Serialization.XmlTypeAttribute("client-project-activity-group-internal-price-writeable", Namespace="")]
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    public partial class ClientProjectActivityGroupInternalPriceWriteable
+    {
+        
+        [System.ComponentModel.DataAnnotations.RequiredAttribute(AllowEmptyStrings=true)]
+        [System.Xml.Serialization.XmlElementAttribute("key", Form=System.Xml.Schema.XmlSchemaForm.Unqualified)]
+        public string Key { get; set; }
+        
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        private System.Collections.ObjectModel.Collection<GroupInternalPrice> _groupInternalPrice;
+        
+        [System.Xml.Serialization.XmlElementAttribute("group-internal-price", Form=System.Xml.Schema.XmlSchemaForm.Unqualified)]
+        public System.Collections.ObjectModel.Collection<GroupInternalPrice> GroupInternalPrice
+        {
+            get
+            {
+                return _groupInternalPrice;
+            }
+            private set
+            {
+                _groupInternalPrice = value;
+            }
+        }
+        
+        /// <summary>
+        /// <para xml:lang="en">Gets a value indicating whether the GroupInternalPrice collection is empty.</para>
+        /// </summary>
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        public bool GroupInternalPriceSpecified
+        {
+            get
+            {
+                return (this.GroupInternalPrice.Count != 0);
+            }
+        }
+        
+        /// <summary>
+        /// <para xml:lang="en">Initializes a new instance of the <see cref="ClientProjectActivityGroupInternalPriceWriteable" /> class.</para>
+        /// </summary>
+        public ClientProjectActivityGroupInternalPriceWriteable()
+        {
+            this._groupInternalPrice = new System.Collections.ObjectModel.Collection<GroupInternalPrice>();
+        }
+        
+        [System.Xml.Serialization.XmlAttributeAttribute("replace-all")]
+        public bool ReplaceAll { get; set; }
+        
+        /// <summary>
+        /// <para xml:lang="en">Gets or sets a value indicating whether the ReplaceAll property is specified.</para>
+        /// </summary>
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        public bool ReplaceAllSpecified { get; set; }
     }
     
     [System.CodeDom.Compiler.GeneratedCodeAttribute("XmlSchemaClassGenerator", "3.0.1356.0")]
@@ -16709,6 +16961,7 @@ namespace Kleer.Models
         {
             this._activityPrice = new System.Collections.ObjectModel.Collection<ClientProjectActivityPriceWriteable>();
             this._userActivityPrice = new System.Collections.ObjectModel.Collection<ClientProjectUserActivityPriceWriteable>();
+            this._activityGroupInternalPrice = new System.Collections.ObjectModel.Collection<ClientProjectActivityGroupInternalPriceWriteable>();
         }
         
         [System.Xml.Serialization.XmlIgnoreAttribute()]
@@ -16736,6 +16989,34 @@ namespace Kleer.Models
             get
             {
                 return (this.UserActivityPrice.Count != 0);
+            }
+        }
+        
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        private System.Collections.ObjectModel.Collection<ClientProjectActivityGroupInternalPriceWriteable> _activityGroupInternalPrice;
+        
+        [System.Xml.Serialization.XmlElementAttribute("activity-group-internal-price", Form=System.Xml.Schema.XmlSchemaForm.Unqualified)]
+        public System.Collections.ObjectModel.Collection<ClientProjectActivityGroupInternalPriceWriteable> ActivityGroupInternalPrice
+        {
+            get
+            {
+                return _activityGroupInternalPrice;
+            }
+            private set
+            {
+                _activityGroupInternalPrice = value;
+            }
+        }
+        
+        /// <summary>
+        /// <para xml:lang="en">Gets a value indicating whether the ActivityGroupInternalPrice collection is empty.</para>
+        /// </summary>
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        public bool ActivityGroupInternalPriceSpecified
+        {
+            get
+            {
+                return (this.ActivityGroupInternalPrice.Count != 0);
             }
         }
     }
