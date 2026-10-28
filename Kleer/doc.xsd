@@ -210,6 +210,22 @@
 		</xs:complexType>
 	</xs:element>
 
+	<xs:element name="budgets">
+		<xs:complexType>
+			<xs:complexContent>
+				<xs:extension base="budgets"/>
+			</xs:complexContent>
+		</xs:complexType>
+	</xs:element>
+
+	<xs:element name="budget-accounts">
+		<xs:complexType>
+			<xs:complexContent>
+				<xs:extension base="budget-accounts"/>
+			</xs:complexContent>
+		</xs:complexType>
+	</xs:element>
+
 	<xs:element name="products">
 		<xs:complexType>
 			<xs:complexContent>
@@ -685,6 +701,14 @@
 		</xs:complexType>
 	</xs:element>
 
+	<xs:element name="client-project-budget-hours-monthly">
+		<xs:complexType>
+			<xs:complexContent>
+				<xs:extension base="client-project-budget-hours-monthly"/>
+			</xs:complexContent>
+		</xs:complexType>
+	</xs:element>
+
 	<xs:element name="client-project-readable">
 		<xs:complexType>
 			<xs:complexContent>
@@ -789,6 +813,22 @@
 		</xs:complexType>
 	</xs:element>
 
+	<xs:element name="company-card-readables">
+		<xs:complexType>
+			<xs:complexContent>
+				<xs:extension base="company-card-readables"/>
+			</xs:complexContent>
+		</xs:complexType>
+	</xs:element>
+
+	<xs:element name="mcp-settings">
+		<xs:complexType>
+			<xs:complexContent>
+				<xs:extension base="mcp-settings"/>
+			</xs:complexContent>
+		</xs:complexType>
+	</xs:element>
+
 	<xs:element name="expense-entry-form">
 		<xs:complexType>
 			<xs:complexContent>
@@ -837,6 +877,14 @@
 		</xs:complexType>
 	</xs:element>
 
+	<xs:element name="card-transactions">
+		<xs:complexType>
+			<xs:complexContent>
+				<xs:extension base="card-transactions"/>
+			</xs:complexContent>
+		</xs:complexType>
+	</xs:element>
+
 	<xs:element name="expense-writable">
 		<xs:complexType>
 			<xs:complexContent>
@@ -860,6 +908,18 @@
 					<xs:sequence>
 						<xs:element name="voucher" type="voucher-detailed" minOccurs="0"
 									maxOccurs="unbounded"/>
+					</xs:sequence>
+				</xs:extension>
+			</xs:complexContent>
+		</xs:complexType>
+	</xs:element>
+
+	<xs:element name="group-voucher-transactions">
+		<xs:complexType>
+			<xs:complexContent>
+				<xs:extension base="paged-result">
+					<xs:sequence>
+						<xs:element name="group-voucher-transaction" type="group-voucher-transaction" minOccurs="0" maxOccurs="unbounded"/>
 					</xs:sequence>
 				</xs:extension>
 			</xs:complexContent>
@@ -951,6 +1011,7 @@
 			<xs:sequence>
 				<xs:element name="id" type="xs:int"/>
 				<xs:element name="message" type="xs:string" minOccurs="0"/>
+				<xs:element name="uncertified-client-project-id" type="xs:int" minOccurs="0" maxOccurs="unbounded"/>
 			</xs:sequence>
 		</xs:complexType>
 	</xs:element>
@@ -1023,6 +1084,30 @@
 		<xs:complexType>
 			<xs:complexContent>
 				<xs:extension base="bank-transaction-distributions"/>
+			</xs:complexContent>
+		</xs:complexType>
+	</xs:element>
+
+	<xs:element name="bank-transaction-attachment-requests">
+		<xs:complexType>
+			<xs:complexContent>
+				<xs:extension base="bank-transaction-attachment-requests"/>
+			</xs:complexContent>
+		</xs:complexType>
+	</xs:element>
+
+	<xs:element name="bank-transaction-attachment-request">
+		<xs:complexType>
+			<xs:complexContent>
+				<xs:extension base="bank-transaction-attachment-request"/>
+			</xs:complexContent>
+		</xs:complexType>
+	</xs:element>
+
+	<xs:element name="bank-transaction-attachment-request-comment">
+		<xs:complexType>
+			<xs:complexContent>
+				<xs:extension base="bank-transaction-attachment-request-comment"/>
 			</xs:complexContent>
 		</xs:complexType>
 	</xs:element>
@@ -1248,6 +1333,136 @@
 					</xs:sequence>
 				</xs:complexType>
 			</xs:element>
+			<xs:element name="card-transaction" type="card-transaction-reference" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						Optional. Set it to file this receipt against a card purchase returned by
+						card-transactions. Only settable when the entry is created; an update may repeat the
+						key the entry already carries, but cannot add, change or remove the link.
+
+						The purchase must be one of the caller's own open, confirmed purchases, i.e. one that
+						card-transactions returned. A key naming anything else is rejected.
+
+						When the purchase has a company-card, file the entry with that card and with the
+						amount the card was charged: copy billing-amount into amount and
+						billing-currency-type into currency-type. The purchase amount and currency are not
+						accepted for a purchase made in another currency.
+
+						VAT follows the entry's own country-code, which normally comes from the purchase.
+						When it differs from the company's country, send vat as 0: no VAT may be claimed on a
+						receipt from another country, and an entry that carries any is rejected with a
+						conflict. Unlike the company card and the amount, the country is not checked against
+						the purchase, so a receipt that genuinely belongs to another country than the card
+						issuer reports can be filed as such.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="card-transactions">
+		<xs:complexContent>
+			<xs:extension base="paged-result">
+				<xs:sequence>
+					<xs:element name="card-transaction" type="card-transaction" minOccurs="0" maxOccurs="unbounded"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+
+	<xs:complexType name="card-transaction">
+		<xs:sequence>
+			<xs:element name="key" type="xs:string">
+				<xs:annotation>
+					<xs:documentation>
+						Stable identifier of the card purchase. Pass it back as the card-transaction
+						reference on expense-entry-writable to file a receipt against this purchase.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="date" type="xs:date"/>
+			<xs:element name="description" type="xs:string" minOccurs="0"/>
+			<xs:element name="merchant" type="xs:string" minOccurs="0"/>
+			<xs:element name="card-number" type="xs:string" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						The last four digits of the card, with the preceding digits masked. Enough to
+						recognise a card that is not registered as a company card in Kleer; use
+						company-card below when the purchase matched a registered card.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<!-- The company card this purchase was made with, when one is registered with a matching card
+			     number. Present it back as expense-entry-writable/company-card when filing the receipt:
+			     the save is rejected if a matching card exists and the entry carries a different one. -->
+			<xs:element name="company-card" type="company-card-readable" minOccurs="0"/>
+			<!-- What the purchase cost, in the currency it was made in. Informational: these are not the
+			     values to file the receipt with when the purchase has a company-card, see billing-amount. -->
+			<xs:element name="amount" type="xs:long"/>
+			<xs:element name="vat" type="xs:long">
+				<xs:annotation>
+					<xs:documentation>
+						The VAT the card issuer reports for the purchase. File it as the entry's vat only when
+						the entry is filed with the company's own country-code: no VAT may be claimed on a
+						receipt from another country, and such an entry is rejected with a conflict however
+						much this field reports.
+
+						The rule is evaluated against the country-code on the entry, not the one below, so it
+						is the entry's own country that decides. See the country-code documentation below.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="currency-type" type="xs:string"/>
+			<xs:element name="billing-amount" type="xs:long">
+				<xs:annotation>
+					<xs:documentation>
+						What the card was actually charged, in billing-currency-type. This is the pair to file
+						a receipt with when the purchase has a company-card: the entry's amount and
+						currency-type must equal billing-amount and billing-currency-type, not the purchase
+						amount and currency above. Filing the purchase amount for a purchase made in another
+						currency is rejected as a conflict, with a message about changing the amount.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="billing-currency-type" type="xs:string"/>
+			<xs:element name="country-code" type="xs:string" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						Where the card issuer says the purchase was made, and the value to copy onto the entry
+						unless the receipt itself says otherwise. It is a suggestion, not a constraint: the
+						entry may be filed with a different country-code and is not rejected for disagreeing
+						with this one, the same way the form in Kleer lets the country be changed and prefers
+						the country of a previous receipt from the same merchant over this value.
+
+						What it does decide is VAT. The entry's own country-code is compared with the
+						company's, and an entry from another country may not carry VAT. So copying this value
+						onto the entry means vat must be 0 whenever it differs from the company's country.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="reservation" type="xs:boolean">
+				<xs:annotation>
+					<xs:documentation>
+						True while the purchase is a reservation we have not registered an authorisation
+						for: an expense filed against it cannot be bundled into an expense report yet.
+						False once the authorisation is registered, including for purchases that started
+						as a reservation.
+
+						Computed from our own reservation and authorisation records, while the amounts
+						above come from the card issuer. The two can disagree - the issuer may have
+						authorised a purchase whose authorisation never reached us - in which case this
+						is true next to amounts that are already final. That is deliberate: it answers
+						whether the purchase can be filed and bundled, which is the promise a caller
+						acts on, not what the issuer currently reports.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="card-transaction-reference">
+		<xs:sequence>
+			<xs:element name="key" type="xs:string"/>
 		</xs:sequence>
 	</xs:complexType>
 
@@ -1324,6 +1539,8 @@
 			<xs:element name="expense-mileage" type="expense-mileage-readable" minOccurs="0"/>
 			<!-- Present only for per-diem / allowance entries (traktamente). -->
 			<xs:element name="expense-allowance" type="expense-allowance-readable" minOccurs="0"/>
+			<!-- Present only when the receipt is filed against a card purchase. -->
+			<xs:element name="card-transaction" type="card-transaction-reference" minOccurs="0"/>
 		</xs:sequence>
 	</xs:complexType>
 
@@ -1640,6 +1857,15 @@
 		</xs:sequence>
 	</xs:complexType>
 
+	<xs:complexType name="company-card-readables">
+		<xs:annotation>
+			<xs:documentation>The company's active company cards. Requires read access to company cards.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="company-card" type="company-card-readable" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+
 	<xs:complexType name="company-card-readable">
 		<xs:sequence>
 			<xs:element name="id" type="xs:int"/>
@@ -1866,9 +2092,13 @@
 	</xs:complexType>
 
 	<xs:complexType name="vouchers-readable">
-		<xs:sequence>
-			<xs:element name="voucher-readable" type="voucher-readable" minOccurs="0" maxOccurs="unbounded"/>
-		</xs:sequence>
+		<xs:complexContent>
+			<xs:extension base="paged-result">
+				<xs:sequence>
+					<xs:element name="voucher-readable" type="voucher-readable" minOccurs="0" maxOccurs="unbounded"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
 	</xs:complexType>
 
 	<xs:complexType name="voucher-writeable">
@@ -2153,6 +2383,71 @@
 		</xs:sequence>
 	</xs:complexType>
 
+	<xs:complexType name="group-voucher-transaction">
+		<xs:annotation>
+			<xs:documentation>
+				One transaction row of a group voucher registered in the company. Only the current revision of each group voucher is
+				included.
+			</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="company">
+				<xs:annotation>
+					<xs:documentation>
+						The company the group voucher is registered in.
+					</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="key" type="xs:string"/>
+						<xs:element name="orgno" type="xs:string"/>
+						<xs:element name="currency-type" type="xs:string"/>
+						<xs:element name="name" type="xs:string"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="voucher">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="key" type="xs:string"/>
+						<xs:element name="number" type="xs:int"/>
+						<xs:element name="description" type="xs:string"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="account">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="number" type="xs:int"/>
+						<xs:element name="name" type="xs:string"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="orgno" type="xs:string">
+				<xs:annotation>
+					<xs:documentation>
+						The organisation number of the group company the transaction concerns, with country code.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="date" type="xs:date">
+				<xs:annotation>
+					<xs:documentation>
+						The transaction date
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="amount" type="xs:long">
+				<xs:annotation>
+					<xs:documentation>
+						The accounting amount in the company's accounting currency, in the smallest unit (öre/cents). Positive is debit,
+						negative is credit.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+
 	<xs:complexType name="currency-amount">
 		<xs:sequence>
 			<xs:element name="currency-type" type="xs:string"/>
@@ -2161,9 +2456,13 @@
 	</xs:complexType>
 
 	<xs:complexType name="payroll-user-readables">
-		<xs:sequence>
-			<xs:element name="payroll-user-readable" type="payroll-user-readable" minOccurs="0" maxOccurs="unbounded"/>
-		</xs:sequence>
+		<xs:complexContent>
+			<xs:extension base="paged-result">
+				<xs:sequence>
+					<xs:element name="payroll-user-readable" type="payroll-user-readable" minOccurs="0" maxOccurs="unbounded"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
 	</xs:complexType>
 
 	<xs:complexType name="payroll-user-readable">
@@ -2267,6 +2566,15 @@
 						<xs:element name="full-history-monthly-salary" type="full-history-monthly-salary" minOccurs="0" maxOccurs="unbounded"/>
 					</xs:sequence>
 				</xs:complexType>
+			</xs:element>
+
+			<xs:element name="comp-time-balance" type="xs:decimal">
+				<xs:annotation>
+					<xs:documentation>
+						The employee's comp time (flex/overtime) balance in hours, as of now.
+						Negative when the employee owes hours.
+					</xs:documentation>
+				</xs:annotation>
 			</xs:element>
 
 		</xs:sequence>
@@ -2383,8 +2691,22 @@
 					</xs:sequence>
 				</xs:complexType>
 			</xs:element>
-			<!-- Skip to leave current manager as is -->
-			<xs:element name="manager-user" type="user-reference" minOccurs="0"/>
+			<xs:element name="manager-user" type="user-reference" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						Sets the manager of this payroll user. Skip to leave the current manager as is.
+						The id must reference an existing user in this company; an omitted, null or zero id
+						is rejected. Use remove-manager-user to remove the current manager.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="remove-manager-user" type="xs:boolean" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						Set to true to remove the current manager. Mutually exclusive with manager-user.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
 			<xs:element name="vacation-entitlement" type="vacation-entitlement" minOccurs="0"/>
 			<xs:element name="workplace-number" type="xs:string" minOccurs="0"/>
 			<xs:element name="workplace-custom-address" type="xs:string" minOccurs="0"/>
@@ -2599,10 +2921,14 @@
 	</xs:complexType>
 
 	<xs:complexType name="payroll-month-report-readables">
-		<xs:sequence>
-			<xs:element name="payroll-month-report-readable" type="payroll-month-report-readable" minOccurs="0"
-						maxOccurs="unbounded"/>
-		</xs:sequence>
+		<xs:complexContent>
+			<xs:extension base="paged-result">
+				<xs:sequence>
+					<xs:element name="payroll-month-report-readable" type="payroll-month-report-readable" minOccurs="0"
+								maxOccurs="unbounded"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
 	</xs:complexType>
 
 	<xs:complexType name="payroll-month-report-readable">
@@ -2855,6 +3181,17 @@
 			<xs:element name="accounting-currency" type="xs:string"/>
 			<xs:element name="bankgiro" type="xs:long" minOccurs="0"/>
 			<xs:element name="supplier-invoice-email" type="xs:string"/>
+			<xs:element name="expense-email" type="xs:string"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="mcp-settings">
+		<xs:annotation>
+			<xs:documentation>Whether the company allows the Kleer MCP server to act for it, and whether MCP write tools are allowed. Readable with any access to the company.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="mcp-access-allowed" type="xs:boolean"/>
+			<xs:element name="mcp-write-allowed" type="xs:boolean"/>
 		</xs:sequence>
 	</xs:complexType>
 
@@ -2882,9 +3219,13 @@
 	</xs:complexType>
 
 	<xs:complexType name="clients">
-		<xs:sequence>
-			<xs:element name="client" type="client" minOccurs="0" maxOccurs="unbounded"/>
-		</xs:sequence>
+		<xs:complexContent>
+			<xs:extension base="paged-result">
+				<xs:sequence>
+					<xs:element name="client" type="client" minOccurs="0" maxOccurs="unbounded"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
 	</xs:complexType>
 
 	<xs:complexType name="client">
@@ -3007,9 +3348,13 @@
 	</xs:complexType>
 
 	<xs:complexType name="projects-metadata">
-		<xs:sequence>
-			<xs:element name="project" type="project-metadata" minOccurs="0" maxOccurs="unbounded"/>
-		</xs:sequence>
+		<xs:complexContent>
+			<xs:extension base="paged-result">
+				<xs:sequence>
+					<xs:element name="project" type="project-metadata" minOccurs="0" maxOccurs="unbounded"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
 	</xs:complexType>
 
 	<xs:complexType name="project-metadata">
@@ -3187,10 +3532,120 @@
 		</xs:sequence>
 	</xs:complexType>
 
-	<xs:complexType name="suppliers">
+	<xs:complexType name="bank-transaction-attachment-requests">
+		<xs:complexContent>
+			<xs:extension base="paged-result">
+				<xs:sequence>
+					<xs:element name="bank-transaction-attachment-request" type="bank-transaction-attachment-request-summary" minOccurs="0" maxOccurs="unbounded"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+
+	<xs:complexType name="bank-transaction-attachment-request-summary">
+		<xs:annotation>
+			<xs:documentation>
+				A request from the company's accountant for supporting documents for an open bank transaction.
+			</xs:documentation>
+		</xs:annotation>
 		<xs:sequence>
-			<xs:element name="supplier" type="supplier" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="id" type="xs:long"/>
+			<xs:element name="date" type="xs:date"/>
+			<xs:element name="reference" type="xs:string"/>
+			<xs:element name="description" type="xs:string"/>
+			<xs:element name="amount" type="xs:long"/>
+			<xs:element name="remaining-amount" type="xs:long"/>
+			<xs:element name="comment-count" type="xs:long"/>
+			<xs:element name="attachment-count" type="xs:long"/>
+			<xs:element name="submitted" type="xs:boolean">
+				<xs:annotation>
+					<xs:documentation>
+						True once the request has been submitted back to the accountant. A submitted request takes no more files or comments.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
 		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="bank-transaction-attachment-request">
+		<xs:complexContent>
+			<xs:extension base="bank-transaction-attachment-request-summary">
+				<xs:sequence>
+					<xs:element name="comments" minOccurs="0">
+						<xs:complexType>
+							<xs:sequence>
+								<xs:element name="comment" minOccurs="0" maxOccurs="unbounded">
+									<xs:complexType>
+										<xs:sequence>
+											<xs:element name="date" type="xs:dateTime"/>
+											<xs:element name="author" type="xs:string"/>
+											<xs:element name="text" type="xs:string"/>
+										</xs:sequence>
+									</xs:complexType>
+								</xs:element>
+							</xs:sequence>
+						</xs:complexType>
+					</xs:element>
+					<xs:element name="events" minOccurs="0">
+						<xs:complexType>
+							<xs:sequence>
+								<xs:element name="event" minOccurs="0" maxOccurs="unbounded">
+									<xs:complexType>
+										<xs:sequence>
+											<xs:element name="date" type="xs:dateTime"/>
+											<xs:element name="author" type="xs:string"/>
+											<xs:element name="type" type="xs:string">
+												<xs:annotation>
+													<xs:documentation>
+														One of Created, Reminder, Rejected or Revoked.
+													</xs:documentation>
+												</xs:annotation>
+											</xs:element>
+										</xs:sequence>
+									</xs:complexType>
+								</xs:element>
+							</xs:sequence>
+						</xs:complexType>
+					</xs:element>
+					<xs:element name="files" minOccurs="0">
+						<xs:complexType>
+							<xs:sequence>
+								<xs:element name="file" minOccurs="0" maxOccurs="unbounded">
+									<xs:complexType>
+										<xs:sequence>
+											<xs:element name="id" type="xs:long"/>
+											<xs:element name="filename" type="xs:string"/>
+										</xs:sequence>
+									</xs:complexType>
+								</xs:element>
+							</xs:sequence>
+						</xs:complexType>
+					</xs:element>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+
+	<xs:complexType name="bank-transaction-attachment-request-comment">
+		<xs:sequence>
+			<xs:element name="comment" type="xs:string">
+				<xs:annotation>
+					<xs:documentation>
+						Not blank, at most 1000 characters, and no characters outside the Basic Multilingual Plane (such as emoji).
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="suppliers">
+		<xs:complexContent>
+			<xs:extension base="paged-result">
+				<xs:sequence>
+					<xs:element name="supplier" type="supplier" minOccurs="0" maxOccurs="unbounded"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
 	</xs:complexType>
 
 	<xs:complexType name="supplier">
@@ -3257,9 +3712,13 @@
 	</xs:complexType>
 
 	<xs:complexType name="users">
-		<xs:sequence>
-			<xs:element name="user" type="user" minOccurs="0" maxOccurs="unbounded"/>
-		</xs:sequence>
+		<xs:complexContent>
+			<xs:extension base="paged-result">
+				<xs:sequence>
+					<xs:element name="user" type="user" minOccurs="0" maxOccurs="unbounded"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
 	</xs:complexType>
 
 	<xs:complexType name="user">
@@ -4131,9 +4590,13 @@
 	</xs:complexType>
 
 	<xs:complexType name="products">
-		<xs:sequence>
-			<xs:element name="product" type="product" minOccurs="0" maxOccurs="unbounded"/>
-		</xs:sequence>
+		<xs:complexContent>
+			<xs:extension base="paged-result">
+				<xs:sequence>
+					<xs:element name="product" type="product" minOccurs="0" maxOccurs="unbounded"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
 	</xs:complexType>
 
 	<xs:complexType name="product">
@@ -4215,9 +4678,13 @@
 	</xs:complexType>
 
 	<xs:complexType name="client-agreements">
-		<xs:sequence>
-			<xs:element name="client-agreement" type="client-agreement" minOccurs="0" maxOccurs="unbounded"/>
-		</xs:sequence>
+		<xs:complexContent>
+			<xs:extension base="paged-result">
+				<xs:sequence>
+					<xs:element name="client-agreement" type="client-agreement" minOccurs="0" maxOccurs="unbounded"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
 	</xs:complexType>
 
 	<xs:complexType name="client-agreement">
@@ -4449,9 +4916,19 @@
 	</xs:complexType>
 
 	<xs:complexType name="event-readables">
-		<xs:sequence>
-			<xs:element name="event-readable" type="event-readable" minOccurs="0" maxOccurs="unbounded"/>
-		</xs:sequence>
+		<xs:annotation>
+			<xs:documentation>
+				The paging attributes are only set when the request asked for a page (page or pageSize); a request without
+				them returns every event in the period and leaves the attributes out.
+			</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="paged-result">
+				<xs:sequence>
+					<xs:element name="event-readable" type="event-readable" minOccurs="0" maxOccurs="unbounded"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
 	</xs:complexType>
 
 	<xs:complexType name="event-readable">
@@ -4474,6 +4951,18 @@
 			<xs:element name="approved" type="xs:boolean"/>
 
 			<xs:element name="status" type="event-status"/>
+
+			<xs:element name="project-activity-key" type="xs:string" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						The project activity the time was reported against, as its key. The key belongs to
+						the event's own client-project, so join it against activity-v2[].key on
+						GET /client-project/{clientProjectId} for that project to get the activity's name
+						and its prices. Absent when the time is not reported against a client project,
+						which is the case for absence and other non-project time.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
 		</xs:sequence>
 	</xs:complexType>
 
@@ -4556,6 +5045,75 @@
 		</xs:sequence>
 	</xs:complexType>
 
+	<xs:complexType name="client-project-budget-hours-monthly">
+		<xs:annotation>
+			<xs:documentation>
+				Budgeted hours per month from the detailed budget of the projects, spread over the months of each budget
+				row as the project budget in the web application spreads them. Hours only: price and cost are never
+				part of this response. Months and groups with no budgeted hours have no row.
+				At most 1000 projects may match the filter, otherwise the request is refused with 400. The filter
+				"active" leaves out projects that have been closed since, also for months in the past.
+			</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="group-by" type="client-project-budget-hours-group-by"/>
+			<xs:element name="row" type="client-project-budget-hours-monthly-row" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:simpleType name="client-project-budget-hours-group-by">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="project"/>
+			<xs:enumeration value="user"/>
+		</xs:restriction>
+	</xs:simpleType>
+
+	<xs:complexType name="client-project-budget-hours-monthly-row">
+		<xs:sequence>
+			<xs:element name="month" type="xs:string">
+				<xs:annotation>
+					<xs:documentation>The month as YYYY-MM.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="client-project" type="client-project-reference" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Set when grouped by project.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="user" type="user-reference" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Set when grouped by user and the row belongs to a person the caller may see.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="assignment" type="client-project-budget-hours-assignment" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Set when grouped by user. Tells what a row without a user stands for.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="hours" type="xs:decimal"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:simpleType name="client-project-budget-hours-assignment">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="user">
+				<xs:annotation>
+					<xs:documentation>Budgeted on a person, who is named in user.</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="unassigned">
+				<xs:annotation>
+					<xs:documentation>Budgeted on an activity with no person. Never shared out on people.</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="withheld">
+				<xs:annotation>
+					<xs:documentation>Budgeted on a person, on a project where the caller may not see the persons. Summed per month without a name.</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+		</xs:restriction>
+	</xs:simpleType>
+
 	<xs:complexType name="client-project-readable">
 		<xs:sequence>
 			<xs:element name="id" type="client-project-reference"/>
@@ -4612,6 +5170,41 @@
 					</xs:documentation>
 				</xs:annotation>
 			</xs:element>
+			<xs:element name="group-project" type="xs:boolean" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						True when this project is a group project (koncernprojekt). A group project is
+						replicated into the subsidiary companies that its members take part from, and the
+						company must have the group project setting active.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="internal-invoicing-enabled" type="xs:boolean" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						True when the group self-billing flow is enabled for this project. It is a modifier on a
+						group project: it can only be turned on for a project that is, or is becoming, a group
+						project, on a company that has the setting enabled. It is not the group internal invoice
+						price, which is read and written through group-internal-price.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="sub-project" type="xs:boolean" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						True when this project is the replicated copy held by a subsidiary company. Such a copy
+						is maintained from its master project and is read-only: attempts to change it through this
+						API — updating the project, its users or its activities, and opening or closing it — are
+						rejected. The exception is the subsidiary's own client-invoice prices (client-project
+						prices), which belong to the copy and can still be set.
+
+						Saving the master project overwrites the fields it mirrors, among them name, number,
+						comment, currency, budget amount, opening and closing date, the member list and
+						internal-invoicing-enabled. Fields outside that set, budget hours among them, are copied
+						once when the copy is created and are not maintained afterwards.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
 		</xs:sequence>
 	</xs:complexType>
 
@@ -4660,9 +5253,25 @@
 			<xs:element name="incoming-invoiced-amount" type="xs:long"/>
 			<xs:element name="incoming-invoiced-vat-amount" type="xs:long"/>
 			<xs:element name="all-activities" type="xs:boolean"/>
-			<xs:element name="activity" type="client-project-activity" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="activity" type="client-project-activity" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>
+						Replaces the project's activities. Not allowed for companies with Project V2, where the
+						project's activities are maintained through the activities endpoint instead.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
 			<xs:element name="all-users" type="xs:boolean"/>
-			<xs:element name="user" type="client-project-user" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="user" type="client-project-user" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>
+						Replaces the project's members. For companies with Project V2 this only applies when
+						creating a project: an update leaves the members unchanged, and they are maintained
+						through the users endpoint instead. A member cannot carry activities for companies with
+						Project V2, neither when creating nor when updating.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
 			<xs:element name="leads" type="lead" minOccurs="0" maxOccurs="unbounded"/>
 			<xs:element name="fixed-price-planned-invoice" type="fixed-price-planned-invoice" minOccurs="0"
 						maxOccurs="unbounded"/>
@@ -4688,6 +5297,35 @@
 						<xs:element name="field" type="field" minOccurs="0" maxOccurs="unbounded"/>
 					</xs:sequence>
 				</xs:complexType>
+			</xs:element>
+			<xs:element name="group-project" type="xs:boolean" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						Makes the project a group project (koncernprojekt), which replicates it into the
+						subsidiary companies its members take part from. Requires the company to have group
+						projects active, and cannot be combined with fixed-price.
+
+						Absent leaves the project as it is. Send it only when the value should change: sending
+						false on a project that has already been replicated is rejected, because the copies the
+						subsidiaries hold would stop being updated and nothing resyncs them afterwards.
+
+						Replication needs a member taking part from another company in the group. Setting this
+						alone leaves the project without subsidiary copies, and only activities whose base
+						activity is a group activity are replicated.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="internal-invoicing-enabled" type="xs:boolean" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						Enables the group self-billing flow for this project. It can only be turned on together
+						with, or on, a group project, and only for a company that has the setting enabled, and it
+						must be turned off before the project stops being a group project.
+
+						Absent leaves the project as it is. This is not the group internal invoice price, which is
+						read and written through group-internal-price.
+					</xs:documentation>
+				</xs:annotation>
 			</xs:element>
 		</xs:sequence>
 	</xs:complexType>
@@ -4742,16 +5380,73 @@
 		<xs:sequence>
 			<xs:element name="user" type="user-reference"/>
 			<xs:element name="activity" type="client-project-user-activity" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="origin-company" type="company-reference" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						The company this member takes part from. Absent leaves an existing member as it is and
+						places a new one in the project own company, which is the only company a member can take
+						part from on a project that is not a group project.
+
+						On a group project the set of subsidiary companies the project is replicated to is
+						derived from the origin companies of its members, so a member taking part from another
+						company in the group is what makes replication happen. Setting group-project without any
+						such member leaves the project without subsidiary copies. The company must be one the
+						project company shares a group with, and the user must have an active membership in it.
+						This is checked when the member is added or the origin company changes, not on a member
+						that is already taking part from it.
+
+						Project leaders carry no origin company here: one supplied through this API always takes
+						part from the project own company, and one taking part from another company is reported
+						without that origin.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
 		</xs:sequence>
 	</xs:complexType>
 
 	<!-- ProjectV2 read types -->
 
+	<xs:complexType name="company-reference">
+		<xs:sequence>
+			<xs:element name="id" type="xs:int"/>
+		</xs:sequence>
+	</xs:complexType>
+
 	<xs:complexType name="client-project-activity-price">
 		<xs:sequence>
 			<xs:element name="price" type="xs:long"/>
 			<xs:element name="valid-from" type="xs:date"/>
-			<xs:element name="type" type="xs:string"/>
+			<xs:element name="type" type="xs:string">
+				<xs:annotation>
+					<xs:documentation>
+						One of Client, Supplier, Internal or SalaryBasis. Note that Internal is the
+						project's own internal price. It is NOT the group's internal invoice price used
+						when a master company invoices its subsidiaries for work on a group project —
+						that price is per subsidiary and is read and written through group-internal-price.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="group-internal-price">
+		<xs:annotation>
+			<xs:documentation>
+				The group's internal invoice price for one subsidiary company, effective from valid-from.
+				This is what the subsidiary invoices the master for work on a group project.
+
+				It is a per-subsidiary OVERRIDE, not a separate kind of price. Where no override exists for
+				a subsidiary, that same invoiced price comes from the master activity's own price of type
+				"Internal" if one is set, and from its "Client" price otherwise. So setting type=Internal on
+				client-project-activity-price does affect what subsidiaries are invoiced — for every
+				subsidiary that has no override here. Setting it does not change what a subsidiary with an
+				override is invoiced, and reading it does not tell you the overridden value.
+			</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="subsidiary-company" type="company-reference"/>
+			<xs:element name="price" type="xs:long"/>
+			<xs:element name="valid-from" type="xs:date"/>
 		</xs:sequence>
 	</xs:complexType>
 
@@ -4765,6 +5460,23 @@
 			<xs:element name="project-specific" type="xs:boolean"/>
 			<xs:element name="payroll-cost-dimension-strategy" type="xs:string" minOccurs="0"/>
 			<xs:element name="price" type="client-project-activity-price" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="group-internal-price" type="group-internal-price" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>
+						The group's per-subsidiary internal invoice prices for this activity, for every
+						subsidiary currently in the project, including historical and future-dated rows. A
+						stored price whose subsidiary has since left the project is not reported, because the
+						company it belongs to can no longer be named in the response.
+
+						Only populated when reading a single project (GET /client-project/{clientProjectId})
+						that is the master project of a group project in a company with cross-company projects
+						active, and only for a caller with project read access; omitted from list responses
+						and for all other projects. Note the consequence of that last condition: absence of
+						this element means "not visible to you" as well as "none set", so do not read an empty
+						result as proof that no internal invoice price exists.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
 		</xs:sequence>
 	</xs:complexType>
 
@@ -4781,6 +5493,27 @@
 		<xs:sequence>
 			<xs:element name="user" type="user-reference"/>
 			<xs:element name="activity-v2" type="client-project-user-activity-v2" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="origin-company" type="company-reference" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						The company this member takes part from. Absent leaves an existing member as it is and
+						places a new one in the project own company, which is the only company a member can take
+						part from on a project that is not a group project.
+
+						On a group project the set of subsidiary companies the project is replicated to is
+						derived from the origin companies of its members, so a member taking part from another
+						company in the group is what makes replication happen. Setting group-project without any
+						such member leaves the project without subsidiary copies. The company must be one the
+						project company shares a group with, and the user must have an active membership in it.
+						This is checked when the member is added or the origin company changes, not on a member
+						that is already taking part from it.
+
+						Project leaders carry no origin company here: one supplied through this API always takes
+						part from the project own company, and one taking part from another company is reported
+						without that origin.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
 		</xs:sequence>
 	</xs:complexType>
 
@@ -4833,6 +5566,41 @@
 			</xs:element>
 			<xs:element name="updated-user-key" type="xs:string" minOccurs="0"/>
 			<xs:element name="updated-date" type="xs:dateTime" minOccurs="0"/>
+			<xs:element name="group-project" type="xs:boolean" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						True when this project is a group project (koncernprojekt). A group project is
+						replicated into the subsidiary companies that its members take part from, and the
+						company must have the group project setting active.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="internal-invoicing-enabled" type="xs:boolean" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						True when the group self-billing flow is enabled for this project. It is a modifier on a
+						group project: it can only be turned on for a project that is, or is becoming, a group
+						project, on a company that has the setting enabled. It is not the group internal invoice
+						price, which is read and written through group-internal-price.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="sub-project" type="xs:boolean" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						True when this project is the replicated copy held by a subsidiary company. Such a copy
+						is maintained from its master project and is read-only: attempts to change it through this
+						API — updating the project, its users or its activities, and opening or closing it — are
+						rejected. The exception is the subsidiary's own client-invoice prices (client-project
+						prices), which belong to the copy and can still be set.
+
+						Saving the master project overwrites the fields it mirrors, among them name, number,
+						comment, currency, budget amount, opening and closing date, the member list and
+						internal-invoicing-enabled. Fields outside that set, budget hours among them, are copied
+						once when the copy is created and are not maintained afterwards.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
 		</xs:sequence>
 	</xs:complexType>
 
@@ -4860,6 +5628,20 @@
 		<xs:sequence>
 			<xs:element name="user" type="user-reference"/>
 			<xs:element name="activity" type="client-project-user-activity-v2-writeable" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="origin-company" type="company-reference" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						The company this member takes part from. Absent leaves an existing member as it is and
+						places a new one in the project own company.
+
+						On a group project this is what decides which subsidiaries the project is replicated to.
+						The company must be one the project company shares a group with, and the user must have an
+						active membership in it; this is checked when the member is added or the origin company
+						changes, not on a member that is already taking part from it. Sending a different
+						origin-company for a user who already takes part moves that membership.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
 		</xs:sequence>
 	</xs:complexType>
 
@@ -4882,7 +5664,16 @@
 			<xs:element name="key" type="xs:string"/>
 			<xs:element name="price" type="xs:long"/>
 			<xs:element name="valid-from" type="xs:date"/>
-			<xs:element name="type" type="xs:string"/>
+			<xs:element name="type" type="xs:string">
+				<xs:annotation>
+					<xs:documentation>
+						One of Client, Supplier, Internal or SalaryBasis. Note that Internal sets the
+						project's own internal price. It does NOT set the group's internal invoice price
+						used when a master company invoices its subsidiaries for work on a group project —
+						use activity-group-internal-price for that.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
 		</xs:sequence>
 	</xs:complexType>
 
@@ -4892,14 +5683,67 @@
 			<xs:element name="user" type="user-reference"/>
 			<xs:element name="price" type="xs:long"/>
 			<xs:element name="valid-from" type="xs:date"/>
-			<xs:element name="type" type="xs:string"/>
+			<xs:element name="type" type="xs:string">
+				<xs:annotation>
+					<xs:documentation>
+						One of Client, Supplier, Internal or SalaryBasis. As for activity-price, Internal
+						is the project's own internal price and not the group's internal invoice price.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
 		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="client-project-activity-group-internal-price-writeable">
+		<xs:annotation>
+			<xs:documentation>
+				The group's per-subsidiary internal invoice prices for one project activity, identified by
+				its activity key. May only be sent by the master company for the master project of a group
+				project in a company with cross-company projects active; any other caller is rejected.
+
+				By default only the subsidiaries named in the payload are touched, and nothing is deleted.
+				Activities not listed are left untouched either way.
+
+				Set replace-all="true" to make the payload the AUTHORITATIVE SET for the activity instead —
+				the behaviour the price dialog has, which is safe there because the dialog always renders and
+				resends every subsidiary. Then a subsidiary of the project without an entry dated today or
+				earlier has EVERY row dated today or earlier removed — its whole price history, not only the
+				price in force — and falls back to the price described on group-internal-price. Future-dated
+				rows are never removed by omission.
+
+				Deleting history changes past billing, not only future billing: work is priced as of the
+				date it was reported, so removing a row that was in force in March changes what March work
+				still to be invoiced costs. That is why it is opt-in here: an integration sending a partial
+				set has no way to know what it removed.
+
+				Each entry upserts on (activity, subsidiary, valid-from). A future-dated entry replaces any
+				existing future-dated price for that subsidiary, because a subsidiary can have at most one
+				future price per activity.
+
+				Under replace-all, note what this means for scheduling, because it is the case most easily
+				got wrong: an entry dated in the future does not count as a price for today. Scheduling a
+				rise for one subsidiary by sending only that one future-dated entry therefore removes the
+				current price of EVERY subsidiary on the activity, including the one being scheduled, until
+				the new date arrives. To schedule a change and keep today's prices, send each subsidiary's current entry
+				alongside the future one. The price dialog does this for you; over the API it is explicit.
+
+				The mirror image is worth knowing too: an entry dated in the past DOES count as a price for
+				today, so it protects the subsidiary from clearing — but it does not change what is charged
+				today if a later row already exists. Such a call is accepted and changes nothing visible.
+			</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="key" type="xs:string"/>
+			<xs:element name="group-internal-price" type="group-internal-price" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attribute name="replace-all" type="xs:boolean"/>
 	</xs:complexType>
 
 	<xs:complexType name="client-project-prices-writeable">
 		<xs:sequence>
 			<xs:element name="activity-price" type="client-project-activity-price-writeable" minOccurs="0" maxOccurs="unbounded"/>
 			<xs:element name="user-activity-price" type="client-project-user-activity-price-writeable" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="activity-group-internal-price" type="client-project-activity-group-internal-price-writeable" minOccurs="0" maxOccurs="unbounded"/>
 		</xs:sequence>
 	</xs:complexType>
 
@@ -6203,6 +7047,71 @@
 			<xs:element name="to-date" minOccurs="0" type="xs:date"/>
 			<xs:element name="orgno" minOccurs="0" type="xs:string"/>
 			<xs:element name="filename" minOccurs="0" type="xs:string"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="budgets">
+		<xs:sequence>
+			<xs:element name="budget" type="budget" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="budget">
+		<xs:sequence>
+			<xs:element name="id" type="xs:int"/>
+			<xs:element name="name" type="xs:string"/>
+			<xs:element name="active" type="xs:boolean"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="budget-accounts">
+		<xs:complexContent>
+			<xs:extension base="paged-result">
+				<xs:sequence>
+					<xs:element name="budget-account" type="budget-account" minOccurs="0" maxOccurs="unbounded"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+
+	<xs:complexType name="budget-account">
+		<xs:sequence>
+
+			<xs:element name="account-nr" type="xs:int"/>
+
+			<xs:element name="year" type="xs:int" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						Not set when the amounts are accumulated over the requested period.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+
+			<xs:element name="month" type="xs:int" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						Zero based, so January is 0 and December is 11.
+						Not set when the amounts are accumulated over the requested period.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+
+			<xs:element name="amount" type="xs:long">
+				<xs:annotation>
+					<xs:documentation>
+						In hundredths of the accounting currency, so 123,45 is 12345.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+
+			<xs:element name="dimension-entry" type="dimension-entry-reference" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						Only set when the amounts are broken down per dimension entry.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+
 		</xs:sequence>
 	</xs:complexType>
 
